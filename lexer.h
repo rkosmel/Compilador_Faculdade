@@ -15,6 +15,7 @@ typedef struct {
 Buffer allocate_buffer();
 char get_next_char(Buffer *buffer, FILE *arquivo);
 extern const char *token_names[];
+int is_symbol(char c);
 
 /* enumerador para os tipos de tokens da linguagem C menos
 else if int return void while
@@ -35,6 +36,7 @@ typedef struct {
 } Token;
 
 Token next_token(Buffer *buffer, FILE *arquivo);
-void tratamento_de_erro(Token token);
+void tratamento_de_erro(Token *token, Buffer *buffer);
+TokenType buscar_token(const char *str); // Mapeia string para TokenType
 
 #endif

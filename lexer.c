@@ -16,55 +16,86 @@ int is_symbol(char c) {
     return c == '+' || c == '-' || c == '*' || c == '/' || c == '<' || c == '>' || c == '=' || c == ';' || c == ',' || c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}' || c == '!';
 }
 
-// Função para imprimir mensagem de erro léxico e tratar interação com o usuário
-void tratamento_de_erro(Token token) {
-    printf("ERRO LEXICO: \"%s\" INVALIDO [linha: %d], COLUNA %d.\n", token.lexema, token.linha, (int)strlen(token.lexema) + 1);
+// Array de strings correspondente ao enum TokenType
+const char *tokenStrings[] = {
+    "ELSE", "IF", "INT", "RETURN", "VOID", "WHILE",
+    "MAIS", "MENOS", "VEZES", "DIVISAO", "MENOR", "MENOR_IGUAL", "MAIOR", "MAIOR_IGUAL", "IGUAL", "DIFERENTE", "ATRIBUICAO", 
+    "PONTO_VIRGULA", "VIRGULA", "ABRE_PARENTESES", "FECHA_PARENTESES", "ABRE_COLCHETES", "FECHA_COLCHETES", "ABRE_CHAVES", 
+    "FECHA_CHAVES", "ID", "NUM", "FIM_DE_ARQUIVO", "ERRO"
+};
 
-    // char input[10];
-    // printf("Deseja encerrar a compilação (F) ou ver mais informações (+)? ");
-    // fgets(input, sizeof(input), stdin);
-    // input[strcspn(input, "\n")] = '\0'; // Remove o newline do final da entrada
+// Função para buscar o índice (enum TokenType) correspondente a um string
+TokenType buscar_token(const char *str) {
+    for (int i = 0; i < sizeof(tokenStrings) / sizeof(tokenStrings[0]); i++) {
+        if (strcmp(str, tokenStrings[i]) == 0) {
+            return (TokenType)i; // Retorna o índice correspondente ao token
+        }
+    }
+    return ERRO; // Retorna ERRO se não encontrar
+}
 
-    // if (strcmp(input, "F") == 0 || strcmp(input, "f") == 0) {
-    //     printf("Encerrando compilação.\n");
-    //     exit(EXIT_FAILURE);
-    // } else if (strcmp(input, "+") == 0) {
-    //     printf("Opções disponíveis:\n");
-    //     printf("1. Ignorar o lexema com erro.\n");
-    //     printf("2. Substituir o lexema.\n");
+void tratamento_de_erro(Token *token, Buffer *buffer) {
+    
+    printf("ERRO LÉXICO: \"%s\" INVÁLIDO [linha: %d], COLUNA %d.\n",
+           token->lexema, token->linha, ((buffer->position)/(buffer->line_number)));
 
-    //     printf("Escolha uma opção (1 ou 2): ");
-    //     fgets(input, sizeof(input), stdin);
-    //     input[strcspn(input, "\n")] = '\0'; // Remove o newline do final da entrada
+    char input[50];
+    printf("Deseja encerrar a compilação (F) ou ver mais informações (+)? ");
+    fgets(input, sizeof(input), stdin);
+    input[strcspn(input, "\n")] = '\0'; // Remove o newline do final da entrada
 
-    //     if (strcmp(input, "1") == 0) {
-    //         printf("Tem certeza que deseja ignorar o lexema com erro? (S/N): ");
-    //         fgets(input, sizeof(input), stdin);
-    //         input[strcspn(input, "\n")] = '\0'; // Remove o newline do final da entrada
+    if (strcmp(input, "F") == 0 || strcmp(input, "f") == 0) {
+        printf("Encerrando compilação.\n");
+        exit(EXIT_FAILURE);
+    } else if (strcmp(input, "+") == 0) {
+        printf("Opções disponíveis:\n");
+        printf("1. Ignorar o lexema com erro.\n");
+        printf("2. Definir manualmente seu token.\n");
 
-    //         if (strcmp(input, "S") == 0 || strcmp(input, "s") == 0) {
-    //             printf("Lexema ignorado.\n");
-    //             // Continua a execução
-    //         } else {
-    //             printf("Operação cancelada.\n");
-    //             // Pode adicionar tratamento adicional aqui se necessário
-    //         }
-    //     } else if (strcmp(input, "2") == 0) {
-    //         // Aqui você implementaria a lógica para substituir o lexema com erro
-    //         // Exemplo: Solicitar ao usuário que insira o token correto para o lexema
-    //         printf("Substituir lexema \"%s\" por: ", token.lexema);
-    //         // Implementar lógica para escolha do token correto e substituição
-    //         // Pode usar um loop para mostrar opções de tokens disponíveis e aguardar a entrada do usuário
-    //         printf("Token substituído com sucesso.\n");
-    //         // Continua a execução com o novo token atribuído ao lexema
-    //     } else {
-    //         printf("Opção inválida. Encerrando compilação.\n");
-    //         exit(EXIT_FAILURE);
-    //     }
-    // } else {
-    //     printf("Opção inválida. Encerrando compilação.\n");
-    //     exit(EXIT_FAILURE);
-    // }
+        printf("Escolha uma opção (1 ou 2): ");
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0'; // Remove o newline do final da entrada
+
+        if (strcmp(input, "1") == 0) {
+            printf("Ignorar o lexema pode levar a futuros erros sintáticos e/ou semânticos.\n");
+            printf("Tem certeza que deseja ignorar o lexema com erro? (S/N): ");
+            fgets(input, sizeof(input), stdin);
+            input[strcspn(input, "\n")] = '\0'; // Remove o newline do final da entrada
+
+            if (strcmp(input, "S") == 0 || strcmp(input, "s") == 0) {
+                printf("Lexema ignorado.\n");
+                // Continua a execução
+            } else {
+                printf("Operação cancelada. Encerrando compilação.\n");
+                exit(EXIT_FAILURE);
+            }
+        } else if (strcmp(input, "2") == 0) {
+            printf("Opções disponíveis:\n");
+            for (int i = 0; i < sizeof(tokenStrings) / sizeof(tokenStrings[0]); i++) {
+                printf("%s%s", tokenStrings[i], (i % 6 == 5 || i == sizeof(tokenStrings) / sizeof(tokenStrings[0]) - 1) ? "\n" : ", ");
+            }
+
+            printf("Digite exatamente como nas opções disponíveis o token correto para o lexema \"%s\": ", token->lexema);
+            fgets(input, sizeof(input), stdin);
+            input[strcspn(input, "\n")] = '\0'; // Remove o newline do final da entrada
+
+            // Busca o token correspondente
+            TokenType novoToken = buscar_token(input);
+            if (novoToken != ERRO) {
+                token->token = novoToken; // Atribui o novo token
+                printf("Token \"%s\" atribuído ao lexema \"%s\".\n", tokenStrings[novoToken], token->lexema);
+            } else {
+                printf("Token inválido. Encerrando compilação.\n");
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            printf("Opção inválida. Encerrando compilação.\n");
+            exit(EXIT_FAILURE);
+        }
+    } else {
+        printf("Opção inválida. Encerrando compilação.\n");
+        exit(EXIT_FAILURE);
+    }
 }
 
 char get_next_char(Buffer *buffer, FILE *arquivo) {
@@ -148,7 +179,7 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
                     estado = 1;
                 } else if (isdigit(c)) {
                     estado = 2;
-                } else if (c == '+' || c == '-' || c == ';' || c == ','  || c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}') {
+                } else if (c == '+' || c == '-' || c == ';' || c == ','  || c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}' || c == '*') {
                     estado = 3;
                 } else if (c == '<' || c == '>' || c == '=') {
                     estado = 4;
@@ -239,10 +270,11 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
         c = get_next_char(buffer, arquivo);
         // verificar se acabou o arquivo
         if (c == EOF) {
-            break;
+            token.token = EOF;
+            return token;
         }
-        // se for um símbolo e estiver nos estados 0, 1, 2 ou 3, encerramos o automato
-        if (is_symbol(c) && (estado == 0 || estado == 1 || estado == 2 || estado == 3)) {
+        // se for um símbolo e estiver nos estados 0, 1, 2, 3 OU 10, encerramos o automato
+        if (is_symbol(c) && (estado == 0 || estado == 1 || estado == 2 || estado == 3 || estado == 10)) {
             // sairemos do automato e retornamos o caractere para o buffer
             buffer->position--;
             break;

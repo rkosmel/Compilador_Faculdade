@@ -17,8 +17,7 @@ int main(int argc, char *argv[])
     while (token.token != EOF)
     {
         if (token.token == ERRO) {
-            // printf("ERRO LEXICO: \"%s\" INVALIDO [linha: %d], COLUNA %d.\n", token.lexema, token.linha, buffer.position);
-            tratamento_de_erro(token);
+            tratamento_de_erro(&token, &buffer);
             token = next_token(&buffer, arquivo); // Obtenha o próximo token
         }
         else {
@@ -26,6 +25,8 @@ int main(int argc, char *argv[])
             token = next_token(&buffer, arquivo); // Obtenha o próximo token
         }
     }
+
+    printf("Fim do arquivo. Análise léxica concluída com sucesso!\n");
 
     fclose(arquivo);
 

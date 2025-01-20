@@ -1,7 +1,17 @@
-/* codigo teste em C menos */
-int ma2in () {
-    int a = 10;
-    int b = 20;
-    int c = a + b;
+/* codigo para calcular os primeiros triangulos equilateros */
+
+int * main () {
+    int n, i, j;
+    ( );
+    
+    for (i = 1; i <= n; i++) {
+        for (j = 1; j <= n - i; j++) {
+            
+        }
+        for (j = 1; j <= 2 * i - 1; j++) {
+            
+        }
+
+    }
     return 0;
 }
