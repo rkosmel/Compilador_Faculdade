@@ -50,14 +50,9 @@
 		</state>
 		<!--The list of transitions.-->
 		<transition>
-			<from>4</from>
-			<to>5</to>
-			<read>=</read>
-		</transition>
-		<transition>
 			<from>0</from>
-			<to>2</to>
-			<read>digito</read>
+			<to>1</to>
+			<read>letra</read>
 		</transition>
 		<transition>
 			<from>0</from>
@@ -65,19 +60,19 @@
 			<read>!</read>
 		</transition>
 		<transition>
-			<from>0</from>
-			<to>1</to>
-			<read>letra</read>
-		</transition>
-		<transition>
 			<from>7</from>
 			<to>8</to>
 			<read>*</read>
 		</transition>
 		<transition>
-			<from>0</from>
-			<to>3</to>
-			<read>+ - ; , ( ) [ ] { } *</read>
+			<from>8</from>
+			<to>8</to>
+			<read>Σ*</read>
+		</transition>
+		<transition>
+			<from>4</from>
+			<to>5</to>
+			<read>=</read>
 		</transition>
 		<transition>
 			<from>8</from>
@@ -85,9 +80,19 @@
 			<read>*</read>
 		</transition>
 		<transition>
-			<from>8</from>
-			<to>8</to>
-			<read>qualquer coisa</read>
+			<from>6</from>
+			<to>5</to>
+			<read>=</read>
+		</transition>
+		<transition>
+			<from>0</from>
+			<to>4</to>
+			<read>&lt; &gt; =</read>
+		</transition>
+		<transition>
+			<from>0</from>
+			<to>3</to>
+			<read>+ - ; , ( ) [ ] { } *</read>
 		</transition>
 		<transition>
 			<from>2</from>
@@ -100,9 +105,9 @@
 			<read>letra*</read>
 		</transition>
 		<transition>
-			<from>6</from>
-			<to>5</to>
-			<read>=</read>
+			<from>0</from>
+			<to>7</to>
+			<read>/</read>
 		</transition>
 		<transition>
 			<from>9</from>
@@ -111,13 +116,8 @@
 		</transition>
 		<transition>
 			<from>0</from>
-			<to>4</to>
-			<read>&lt; &gt; =</read>
-		</transition>
-		<transition>
-			<from>0</from>
-			<to>7</to>
-			<read>/</read>
+			<to>2</to>
+			<read>digito</read>
 		</transition>
 	</automaton>
 </structure>

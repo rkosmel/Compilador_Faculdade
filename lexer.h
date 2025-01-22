@@ -17,12 +17,6 @@ char get_next_char(Buffer *buffer, FILE *arquivo);
 extern const char *token_names[];
 int is_symbol(char c);
 
-/* enumerador para os tipos de tokens da linguagem C menos
-else if int return void while
-+ - * / < <= > >= == != = ; , ( ) [ ] { }
-ID = letra letra*
-NUM = dígito dígito*
-*/
 typedef enum {
     ELSE, IF, INT, RETURN, VOID, WHILE,
     MAIS, MENOS, VEZES, DIVISAO, MENOR, MENOR_IGUAL, MAIOR, MAIOR_IGUAL, IGUAL, DIFERENTE, ATRIBUICAO, PONTO_VIRGULA, VIRGULA, ABRE_PARENTESES, FECHA_PARENTESES, ABRE_COLCHETES, FECHA_COLCHETES, ABRE_CHAVES, FECHA_CHAVES,
