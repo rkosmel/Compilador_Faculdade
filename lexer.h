@@ -10,9 +10,10 @@ typedef struct {
     char buffer[BUFFER_SIZE];
     int position;
     int line_number;
+    int coluna;
 } Buffer;
 
-Buffer allocate_buffer();
+Buffer *allocate_buffer(); // Agora retorna um ponteiro
 char get_next_char(Buffer *buffer, FILE *arquivo);
 extern const char *token_names[];
 int is_symbol(char c);

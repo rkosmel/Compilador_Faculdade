@@ -1,17 +1,12 @@
-/* codigo para calcular os primeiros triangulos equilateros */
+oi )/* Comentário aqui */
 
-int * main () {
-    int n, i, j;
-    ( );
-    
-    for (i = 1; i <= n; i++) {
-        for (j = 1; j <= n - i; j++) {
-            
-        }
-        for (j = 1; j <= 2 * i - 1; j++) {
-            
-        }
-
+logo
+int main () {
+    int a, b, c;
+    if (a > b) {
+        c = a + b; /* outro aqui */
+        int
+    } else {
+        c = a - b;
     }
-    return 0;
 }

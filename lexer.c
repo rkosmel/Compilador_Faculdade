@@ -1,13 +1,18 @@
-#include "lexer.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "lexer.h"
 
-Buffer allocate_buffer() {
-    Buffer buffer;
-    memset(buffer.buffer, 0, BUFFER_SIZE);
-    buffer.position = 0;
-    buffer.line_number = 1;
+Buffer *allocate_buffer() {
+    Buffer *buffer = (Buffer *)malloc(sizeof(Buffer));
+    if (!buffer) {
+        perror("Erro ao alocar buffer");
+        exit(EXIT_FAILURE);
+    }
+    memset(buffer->buffer, 0, BUFFER_SIZE);
+    buffer->position = 0;
+    buffer->line_number = 1;
+    buffer->coluna = 0;
     return buffer;
 }
 
@@ -36,8 +41,8 @@ TokenType buscar_token(const char *str) {
 
 void tratamento_de_erro(Token *token, Buffer *buffer) {
     
-    printf("ERRO LÉXICO: \"%s\" INVÁLIDO [linha: %d], COLUNA %d.\n",
-           token->lexema, token->linha, ((buffer->position)/(buffer->line_number)));
+    printf("ERRO LÉXICO: \"%s\" INVÁLIDO [linha: %d], COLUNA %zu.\n",
+           token->lexema, token->linha, buffer->coluna - strlen(token->lexema));
 
     char input[50];
     printf("Deseja encerrar a compilação (F) ou ver mais informações (+)? ");
@@ -99,32 +104,42 @@ void tratamento_de_erro(Token *token, Buffer *buffer) {
 }
 
 char get_next_char(Buffer *buffer, FILE *arquivo) {
+    // Verifica se precisamos carregar mais caracteres no buffer
     if (buffer->position >= BUFFER_SIZE || buffer->buffer[buffer->position] == '\0') {
         int i = 0;
         char c;
+
+        // Preenche o buffer com novos caracteres do arquivo
         while (i < BUFFER_SIZE - 1) {
             c = fgetc(arquivo);
             if (c == EOF) {
-                if (i == 0) {
+                if (i == 0) { // Se o buffer está vazio, retorna EOF de verdade
                     buffer->buffer[i] = '\0';
-                    buffer->position = 0;
                     return EOF;
                 }
                 break;
             }
             buffer->buffer[i++] = c;
         }
-        buffer->buffer[i] = '\0';
-        buffer->position = 0;
+        
+        buffer->buffer[i] = '\0';  // Marca o final do buffer
+        buffer->position = 0;  // Reinicia a posição para o novo buffer
     }
 
-    char current_char = buffer->buffer[buffer->position];
+    // Garante que position não ultrapasse os limites do buffer
+    if (buffer->position >= BUFFER_SIZE) {
+        return EOF;
+    }
 
+    char current_char = buffer->buffer[buffer->position++]; // Lê e avança a posição
+
+    // Atualiza contagem de linha e coluna corretamente
     if (current_char == '\n') {
         buffer->line_number++;
+        buffer->coluna = 0;  // Resetamos a coluna ao mudar de linha
+    } else {
+        buffer->coluna++;
     }
-
-    buffer->position++;
 
     return current_char;
 }
@@ -156,7 +171,7 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
 
     int estado = 0;
     // Nossos delimitadores do lexemas serão espaços em branco, tabulações e quebras de linha (quando não estiverem dentro de um comentário)
-    while ((c != ' ' && c != '\t' && c != '\n' && c != '\r') || estado == 8) {
+    while ((c != ' ' && c != '\t' && c != '\n' && c != '\r') || estado == 8 || estado == 9) {
 
         /* Implementação usando cases aninhados a partir do automato finito desenvolvido
         Teremos 11 estados, sendo q0 o inicial, q10 estado armadilha (erro)
@@ -164,10 +179,6 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
         */
         switch (estado) {
             case 0: {
-                // resetamos as variáveis pois pode ter voltado de um comentário
-                i = 0;
-                memset(lexema, 0, 65);
-
                 if (isalpha(c)) {
                     estado = 1;
                 } else if (isdigit(c)) {
@@ -216,8 +227,7 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
             }
 
             case 5: {
-                estado = 10;
-                break;
+                // nunca chegará aqui, pois já teremos encerrado o automato
             }
 
             case 6: {
@@ -231,8 +241,6 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
             case 7: {
                 if (c == '*')
                     estado = 8;
-                else
-                    estado = 10;
                 break;
             }
 
@@ -242,14 +250,13 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
                 break;
             }
 
-            case 9: {
+            case 9: {    
                 if (c == '/') {
                     estado = 0;
-                    // buffer->position++; // para não pegar o / do final do comentário
-                    c = get_next_char(buffer, arquivo);
-                }
-                else
+                    return next_token(buffer, arquivo);
+                } else {
                     estado = 8;
+                }
                 break;
             }
 
@@ -257,19 +264,30 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
                 estado = 10;
                 break;
             }
-
         }
+
         lexema[i++] = c;
+
         c = get_next_char(buffer, arquivo);
         // verificar se acabou o arquivo
         if (c == EOF) {
             token.token = EOF;
             return token;
         }
-        // se for um símbolo e estiver nos estados 0, 1, 2, 3 OU 10, encerramos o automato
-        if (is_symbol(c) && (estado == 0 || estado == 1 || estado == 2 || estado == 3 || estado == 10)) {
-            // sairemos do automato e retornamos o caractere para o buffer
-            buffer->position--;
+        // se o próximo for um símbolo e estiver nos estados 1, 2 ou 10, encerramos o automato
+        if (is_symbol(c) && (estado == 1 || estado == 2 || estado == 10)) {
+            // sairemos do automato e retornamos o caractere para o buffer se nao for um \n                             
+            if (c != '\n') {
+                buffer->position--;
+            }  
+            break;
+        }
+        // se parou nos estados 3 ou 5 ou 7 sendo que c não é *,finalizamos o lexema
+        if ((estado == 3 || estado == 5) || (estado == 7 && c != '*')) {
+            // sairemos do automato e retornamos o caractere para o buffer se nao for um \n                             
+            if (c != '\n') {
+                buffer->position--;
+            }               
             break;
         }
     }
@@ -395,6 +413,10 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
         case 10: {
             strcpy(token.lexema, lexema); // copiar o lexema para a estrutura token
             token.token = ERRO;
+            break;
+        }
+
+        default: {
             break;
         }
     }   
