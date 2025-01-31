@@ -42,7 +42,7 @@ TokenType buscar_token(const char *str) {
 void tratamento_de_erro(Token *token, Buffer *buffer) {
     
     printf("ERRO LÉXICO: \"%s\" INVÁLIDO [linha: %d], COLUNA %zu.\n",
-           token->lexema, token->linha, buffer->coluna - strlen(token->lexema));
+           token->lexema, token->linha, (buffer->coluna - strlen(token->lexema) - 1));
 
     char input[50];
     printf("Deseja encerrar a compilação (F) ou ver mais informações (+)? ");
@@ -138,7 +138,7 @@ char get_next_char(Buffer *buffer, FILE *arquivo) {
         buffer->line_number++;
         buffer->coluna = 0;  // Resetamos a coluna ao mudar de linha
     } else {
-        buffer->coluna++;
+        buffer->coluna++; // Incrementa a coluna normalmente
     }
 
     return current_char;
@@ -268,6 +268,8 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
 
         lexema[i++] = c;
 
+        int linha_atual = buffer->line_number;
+
         c = get_next_char(buffer, arquivo);
         // verificar se acabou o arquivo
         if (c == EOF) {
@@ -279,6 +281,9 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
             // sairemos do automato e retornamos o caractere para o buffer se nao for um \n                             
             if (c != '\n') {
                 buffer->position--;
+                if (buffer->line_number != linha_atual) {
+                    buffer->line_number--;
+                }
             }  
             break;
         }
@@ -287,7 +292,10 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
             // sairemos do automato e retornamos o caractere para o buffer se nao for um \n                             
             if (c != '\n') {
                 buffer->position--;
-            }               
+                if (buffer->line_number != linha_atual) {
+                    buffer->line_number--;
+                }
+            }  
             break;
         }
     }
