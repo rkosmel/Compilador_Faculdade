@@ -2,9 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include "lexer.h"
+#include "parser.h"
 
 void scanner(const char *filename);
-void analisar_sintatica(const char *filename);
+void parser(const char *filename);
 void analisar_semantica(const char *filename);
 
 int main(int argc, char *argv[])
@@ -26,7 +27,7 @@ int main(int argc, char *argv[])
 
         case 'p': 
         case 'P': 
-            analisar_sintatica(arquivo_nome);
+            parser(arquivo_nome);
             break;
 
         case 's': 
@@ -69,9 +70,25 @@ void scanner(const char *filename) {
     free(buffer); // Agora correto
 }
 
-// Funções de análise sintática e semântica (devem ser implementadas depois)
-void analisar_sintatica(const char *filename) {
-    printf("Análise sintática ainda não implementada para o arquivo: %s\n", filename);
+void parser(const char *filename) {
+    FILE *arquivo = fopen(filename, "r");
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo: %s\n", filename);
+        return;
+    }
+
+    printf("Arquivo %s aberto com sucesso. Endereço: %p\n", filename, (void*)arquivo); // Debugging
+
+    printf("Iniciando análise sintática...\n");
+    NoArvore* raiz = parse(arquivo); // Agora passamos o arquivo corretamente
+
+    if (raiz != NULL) {
+        imprimir_arvore(raiz, 0);
+    } else {
+        printf("Erro: A análise sintática falhou e retornou NULL.\n");
+    }
+
+    fclose(arquivo);
 }
 
 void analisar_semantica(const char *filename) {

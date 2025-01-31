@@ -104,6 +104,11 @@ void tratamento_de_erro(Token *token, Buffer *buffer) {
 }
 
 char get_next_char(Buffer *buffer, FILE *arquivo) {
+    if (arquivo == NULL) {
+        printf("Erro: Tentativa de leitura com arquivo NULL em get_next_char().\n");
+        exit(1);
+    }
+
     // Verifica se precisamos carregar mais caracteres no buffer
     if (buffer->position >= BUFFER_SIZE || buffer->buffer[buffer->position] == '\0') {
         int i = 0;
@@ -152,6 +157,11 @@ const char *token_names[] = {
 };
 
 Token next_token(Buffer *buffer, FILE *arquivo) {
+    if (arquivo == NULL) {
+        printf("Erro: Tentativa de chamar next_token() com arquivo NULL.\n");
+        exit(1);
+    }
+
     Token token;
     char lexema[65] = "";
     int i = 0;
@@ -160,7 +170,7 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
 
     // Encerrar a função se o arquivo acabar
     if (c == EOF) {
-        token.token = EOF;
+        token.token = FIM_DE_ARQUIVO;
         return token;
     }
 
@@ -273,7 +283,7 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
         c = get_next_char(buffer, arquivo);
         // verificar se acabou o arquivo
         if (c == EOF) {
-            token.token = EOF;
+            token.token = FIM_DE_ARQUIVO;
             return token;
         }
         // se o próximo for um símbolo e estiver nos estados 1, 2 ou 10, encerramos o automato
