@@ -182,10 +182,12 @@ NoArvore* var_decl() {
     return no;
 }
 
-NoArvore* fun_decl(NoArvore* id_no) {  // Recebe o nó do ID já consumido
+NoArvore* fun_decl(NoArvore* id_no) {
     NoArvore* no = criar_no("fun_decl");
 
-    adicionar_filho(no, id_no);  // ✅ Adiciona corretamente o ID (main)
+    NoArvore* id_node = criar_no("ID");
+    adicionar_filho(id_node, id_no);  // ✅ Agora `main` será um filho de `ID`
+    adicionar_filho(no, id_node);
 
     match(ABRE_PARENTESES);
     adicionar_filho(no, params());
@@ -328,12 +330,10 @@ NoArvore* return_stmt() {
         adicionar_filho(no, expression_stmt());
     }
 
-    // ✅ Só consome `;` se estiver presente, e já sai imediatamente
-    if (token.token == PONTO_VIRGULA) {
-        printf("return_stmt(): Chamando match(PONTO_VIRGULA) (Linha %d)\n", token.linha);
+    if (token.token == PONTO_VIRGULA) {  
+        printf("return_stmt(): Consumindo PONTO_VIRGULA (Linha %d)\n", token.linha);
         match(PONTO_VIRGULA);
     }
 
-    printf("return_stmt(): Concluído corretamente (Linha %d)\n", token.linha);
     return no;
 }
