@@ -153,59 +153,45 @@ NoArvore* decl_list() {
 NoArvore* decl() {
     NoArvore* no = criar_no("decl");
 
-    if (token.token == INT || token.token == VOID) {
-        printf("Chamando type_specifier() com token: %s\n", token_names[token.token]); // Debug
-        adicionar_filho(no, type_specifier());
+    NoArvore* tipo_no = type_specifier();
+    adicionar_filho(no, tipo_no);
 
-        printf("Chamando match(ID)...\n");
-        match(ID); // Consome o identificador
+    NoArvore* id_no = criar_no(token.lexema);  // ✅ Captura o ID antes de consumi-lo
+    match(ID);
 
-        NoArvore* id_no = criar_no("ID");
-        adicionar_filho(no, id_no);
-
-        if (token.token == ABRE_PARENTESES) {
-            printf("Chamando fun_decl()...\n");
-            adicionar_filho(no, fun_decl());
-        } else {
-            printf("Chamando var_decl()...\n");
-            adicionar_filho(no, var_decl());
-        }
+    if (token.token == ABRE_PARENTESES) {  // Se for uma função
+        adicionar_filho(no, fun_decl(id_no));
     } else {
-        printf("Erro sintático na linha %d: declaração inválida.\n", token.linha);
-        exit(1);
+        adicionar_filho(no, var_decl(id_no));
     }
+
     return no;
 }
 
 NoArvore* var_decl() {
     NoArvore* no = criar_no("var_decl");
 
-    adicionar_filho(no, type_specifier()); // Consome o tipo da variável (int, void)
-    match(ID); // Consome o identificador da variável
+    adicionar_filho(no, type_specifier()); // Tipo da variável
 
-    if (token.token == ABRE_COLCHETES) {  // Se for um array
-        match(ABRE_COLCHETES);
-        match(NUM);
-        match(FECHA_COLCHETES);
-    }
+    NoArvore* id_no = criar_no(token.lexema); // Adiciona o nome da variável
+    adicionar_filho(no, id_no);
+    match(ID);
 
-    match(PONTO_VIRGULA); // Aqui garantimos que há um ';' no final
+    match(PONTO_VIRGULA); // Finaliza a declaração
 
     return no;
 }
 
-NoArvore* fun_decl() {
+NoArvore* fun_decl(NoArvore* id_no) {  // Recebe o nó do ID já consumido
     NoArvore* no = criar_no("fun_decl");
 
-    match(ABRE_PARENTESES); // Já consumimos '(' corretamente
+    adicionar_filho(no, id_no);  // ✅ Adiciona corretamente o ID (main)
+
+    match(ABRE_PARENTESES);
     adicionar_filho(no, params());
-    match(FECHA_PARENTESES); // Já consumimos ')' corretamente
-
-    // ⚠️ Aqui pode estar chamando `type_specifier()` desnecessariamente
-    // Removemos para evitar chamada duplicada
-    // adicionar_filho(no, type_specifier());
-
-    adicionar_filho(no, compound_stmt()); // Segue para o corpo da função
+    match(FECHA_PARENTESES);
+    
+    adicionar_filho(no, compound_stmt());
 
     return no;
 }
@@ -300,8 +286,7 @@ NoArvore* stmt() {
     } else if (token.token == RETURN) {
         printf("stmt(): Chamando return_stmt() (Linha %d)\n", token.linha);
         adicionar_filho(no, return_stmt());
-        printf("stmt(): Retornando após return_stmt() (Linha %d)\n", token.linha);
-        return no;  // **Evita que stmt() peça outro `PONTO_VIRGULA`**
+        return no;  // ✅ Retorna imediatamente para evitar consumir outro `PONTO_VIRGULA`
     } else {
         printf("Erro sintático na linha %d: comando inválido.\n", token.linha);
         exit(1);
@@ -313,27 +298,24 @@ NoArvore* stmt() {
 NoArvore* expression_stmt() {
     NoArvore* no = criar_no("expression_stmt");
 
-    if (token.token == ID) {
-        NoArvore* var_no = criar_no("var");
-        adicionar_filho(var_no, criar_no(token.lexema));
-        match(ID);
+    NoArvore* var_no = criar_no("var");
+    adicionar_filho(var_no, criar_no(token.lexema)); // Nome da variável
+    match(ID);
 
-        if (token.token == ATRIBUICAO) {
-            match(ATRIBUICAO);
-            NoArvore* expr_no = criar_no("expressao");
-            adicionar_filho(expr_no, criar_no(token.lexema));
-            match(NUM); // Consome o número após "="
+    if (token.token == ATRIBUICAO) {  // Detecta atribuição
+        NoArvore* assign_no = criar_no("assign_expr");
+        adicionar_filho(assign_no, var_no);
+        
+        match(ATRIBUICAO);
+        
+        NoArvore* value_no = criar_no(token.lexema); // Valor atribuído
+        adicionar_filho(assign_no, value_no);
+        match(NUM);
 
-            adicionar_filho(var_no, expr_no);
-        }
-
-        match(PONTO_VIRGULA);
-        adicionar_filho(no, var_no);
-    } else {
-        printf("Erro sintático na linha %d: esperado uma expressão ou ponto e vírgula.\n", token.linha);
-        exit(1);
+        adicionar_filho(no, assign_no);
     }
 
+    match(PONTO_VIRGULA);
     return no;
 }
 
@@ -346,11 +328,12 @@ NoArvore* return_stmt() {
         adicionar_filho(no, expression_stmt());
     }
 
-    if (token.token == PONTO_VIRGULA) {  // ✅ Só consome `;` se estiver realmente presente
+    // ✅ Só consome `;` se estiver presente, e já sai imediatamente
+    if (token.token == PONTO_VIRGULA) {
         printf("return_stmt(): Chamando match(PONTO_VIRGULA) (Linha %d)\n", token.linha);
         match(PONTO_VIRGULA);
     }
 
-    printf("return_stmt(): Concluído (Linha %d)\n", token.linha);
+    printf("return_stmt(): Concluído corretamente (Linha %d)\n", token.linha);
     return no;
 }
