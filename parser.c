@@ -271,11 +271,21 @@ NoArvore* stmt_list() {
     NoArvore* no = criar_no("stmt_list");
 
     while (token.token != FECHA_CHAVES && token.token != FIM_DE_ARQUIVO) {
-        printf("stmt_list(): Processando stmt() com token: %s (Linha %d)\n", token_names[token.token], token.linha);
-        adicionar_filho(no, stmt());
+        printf("stmt_list(): Processando stmt() com token: %s (Linha %d)\n", 
+               token_names[token.token], token.linha);
+        
+        NoArvore* stmt_no = stmt();
+        if (stmt_no != NULL) {
+            adicionar_filho(no, stmt_no);
+        }
+
+        // ✅ Se o próximo token for `FECHA_CHAVES`, saia do loop imediatamente.
+        if (token.token == FECHA_CHAVES) {
+            printf("stmt_list(): Encontrado FECHA_CHAVES (Linha %d), saindo do loop.\n", token.linha);
+            break;
+        }
     }
 
-    printf("stmt_list(): Saindo com token: %s (Linha %d)\n", token_names[token.token], token.linha);
     return no;
 }
 
@@ -310,10 +320,11 @@ NoArvore* expression_stmt() {
         
         match(ATRIBUICAO);
         
-        NoArvore* value_no = criar_no(token.lexema); // Valor atribuído
-        adicionar_filho(assign_no, value_no);
+        NoArvore* value_no = criar_no("NUM");  // ✅ Agora o número tem um nó específico
+        adicionar_filho(value_no, criar_no(token.lexema)); // Valor atribuído
         match(NUM);
 
+        adicionar_filho(assign_no, value_no);
         adicionar_filho(no, assign_no);
     }
 
@@ -321,13 +332,15 @@ NoArvore* expression_stmt() {
     return no;
 }
 
+
 NoArvore* return_stmt() {
     NoArvore* no = criar_no("return_stmt");
     match(RETURN);
 
     if (token.token != PONTO_VIRGULA) {  
         printf("return_stmt(): Chamando expression_stmt() (Linha %d)\n", token.linha);
-        adicionar_filho(no, expression_stmt());
+        NoArvore* expr_no = expression_stmt();
+        adicionar_filho(no, expr_no);
     }
 
     if (token.token == PONTO_VIRGULA) {  
