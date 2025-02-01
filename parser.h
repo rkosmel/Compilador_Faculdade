@@ -3,35 +3,46 @@
 
 #include "lexer.h"
 
-// Estrutura para representar os nós da árvore de análise sintática
+// Estrutura de um nó da árvore sintática
 typedef struct NoArvore {
-    char nome[50];                // Nome do nó (ex: "Declaração", "Expressão", etc.)
-    struct NoArvore **filhos;     // Vetor de ponteiros para filhos
-    int num_filhos;               // Número de filhos
+    char nome[50];         // Nome do nó (ex: "if", "assign_expr", "return_stmt")
+    struct NoArvore** filhos;
+    int num_filhos;
 } NoArvore;
 
-// Função principal para iniciar a análise sintática
-NoArvore* parse();
-
-// Funções para imprimir a árvore sintática
+// Funções principais do parser
+NoArvore* parse(FILE *arquivo);
 void imprimir_arvore(NoArvore *raiz, int nivel);
 
-// Funções recursivas para cada regra da gramática
-NoArvore* program();
-NoArvore* decl_list();
-NoArvore* decl();
-NoArvore* var_decl();
-NoArvore* fun_decl();
-NoArvore* type_specifier();
-NoArvore* params();
-NoArvore* param_list();
-NoArvore* param();
-NoArvore* compound_stmt();
-NoArvore* local_decl();
-NoArvore* stmt_list();
-NoArvore* stmt();
-NoArvore* expression();
-NoArvore* term();
-NoArvore* factor();
+// Funções auxiliares
+void avance();
+void casa(TokenType esperado);
+void adicionar_filho(NoArvore *pai, NoArvore *filho);
+NoArvore* criar_no(const char *nome);
 
-#endif
+// Funções de análise sintática
+NoArvore* programa();
+NoArvore* declaracao_lista();
+NoArvore* declaracao();
+NoArvore* funcao_parametros();
+NoArvore* lista_parametros();
+NoArvore* parametro();
+NoArvore* composto_decl();
+NoArvore* local_declaracoes();
+NoArvore* statement_lista();
+NoArvore* statement();
+NoArvore* selecao_decl();
+NoArvore* iteracao_decl();
+NoArvore* retorno_decl();
+NoArvore* expressao();
+NoArvore* expressao_simples();
+NoArvore* soma();
+NoArvore* termo();
+NoArvore* fator();
+NoArvore* relacional();
+NoArvore* args();
+NoArvore* var();
+NoArvore* lista_args();
+NoArvore* var();
+
+#endif // PARSER_H

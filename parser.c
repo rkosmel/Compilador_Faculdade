@@ -8,345 +8,361 @@ Token token;
 Buffer *buffer;
 FILE *arquivo;
 
-NoArvore* parse(FILE *arquivo);
+NoArvore* parse(FILE *arquivo_passado) {
+    arquivo = arquivo_passado;
+    buffer = allocate_buffer();
+    printf("Arquivo atribuído corretamente no parser: %p\n", (void*)arquivo);
+    avance();  // Lê o primeiro token
+    NoArvore* raiz = programa();
+    printf("Análise sintática concluída com sucesso!\n");
+    return raiz;
+}
 
-// Declarações antecipadas das funções para evitar erros de compilação
-void adicionar_filho(NoArvore *pai, NoArvore *filho);
-NoArvore* expression_stmt();
-NoArvore* return_stmt();
-NoArvore* criar_no(const char *nome); 
-void advance();
-void match(TokenType esperado);  
-
-// Função para criar um novo nó da árvore sintática
 NoArvore* criar_no(const char *nome) {
     NoArvore* no = (NoArvore*) malloc(sizeof(NoArvore));
-    if (no == NULL) {
-        printf("Erro: Falha na alocação de memória para nó da árvore.\n");
-        exit(1);
-    }
     strcpy(no->nome, nome);
     no->filhos = NULL;
     no->num_filhos = 0;
     return no;
 }
 
-// Obtém o próximo token do lexer
-void advance() {
-    if (token.token == FIM_DE_ARQUIVO) {
-        printf("Aviso: Tentativa de avançar após FIM_DE_ARQUIVO. Ignorando avanço.\n");
-        return; // Impede que continue avançando
-    }
-
-    token = next_token(buffer, arquivo);
-
-    if (token.token == FIM_DE_ARQUIVO) {
-        printf("Token recebido: FIM_DE_ARQUIVO\n");
-    } else {
-        printf("Token recebido: %s (Lexema: '%s', Linha: %d)\n", token_names[token.token], token.lexema, token.linha);
-    }
-}
-
-// Verifica se o token atual é o esperado
-void match(TokenType esperado) {
-    printf("match(): Esperado: %s, Encontrado: %s (Linha: %d)\n", 
-           token_names[esperado], token_names[token.token], token.linha);
-
-    if (token.token == esperado) {
-        advance();
-    } else {
-        printf("Erro sintático na linha %d: esperado '%s', encontrado '%s'.\n",
-               token.linha, token_names[esperado], token_names[token.token]);
-        exit(1);
-    }
-}
-
-
-NoArvore* type_specifier() {
-    NoArvore* no = criar_no("type_specifier");
-
-    if (token.token == INT) {
-        match(INT);
-        adicionar_filho(no, criar_no("int"));
-    } else if (token.token == VOID) {
-        match(VOID);
-        adicionar_filho(no, criar_no("void"));
-    } else {
-        printf("Erro sintático na linha %d: esperado 'int' ou 'void'.\n", token.linha);
-        exit(1);
-    }
-
-    return no;
-}
-
-// Função para adicionar filhos a um nó
 void adicionar_filho(NoArvore *pai, NoArvore *filho) {
-    if (pai == NULL || filho == NULL) {
-        printf("Erro: Tentativa de adicionar filho a um nó nulo.\n");
-        return;
-    }
-
+    if (pai == NULL || filho == NULL) return;
     pai->num_filhos++;
     pai->filhos = (NoArvore**) realloc(pai->filhos, pai->num_filhos * sizeof(NoArvore*));
-    if (pai->filhos == NULL) {
-        printf("Erro: Falha na realocação de memória para filhos.\n");
-        exit(1);
-    }
-
     pai->filhos[pai->num_filhos - 1] = filho;
 }
 
-// Imprime a árvore sintática recursivamente
 void imprimir_arvore(NoArvore *raiz, int nivel) {
-    if (raiz == NULL) return;  // Evita acessar um nó inválido
-
-    for (int i = 0; i < nivel; i++) {
-        printf("    ");
-    }
+    if (raiz == NULL) return;
+    for (int i = 0; i < nivel; i++) printf("    ");
     printf("%s(\n", raiz->nome);
-
-    for (int i = 0; i < raiz->num_filhos; i++) {
-        if (raiz->filhos[i] != NULL) {  // Evita acessar filhos nulos
-            imprimir_arvore(raiz->filhos[i], nivel + 1);
-        }
-    }
-
-    for (int i = 0; i < nivel; i++) {
-        printf("    ");
-    }
+    for (int i = 0; i < raiz->num_filhos; i++) imprimir_arvore(raiz->filhos[i], nivel + 1);
+    for (int i = 0; i < nivel; i++) printf("    ");
     printf(")\n");
 }
 
-NoArvore* parse(FILE *arquivo_passado) {
-    arquivo = arquivo_passado;
-    buffer = allocate_buffer();
-
-    printf("Arquivo atribuído corretamente no parser: %p\n", (void*)arquivo);
-
-    advance();  // Garante que o primeiro token seja lido corretamente
-    NoArvore* raiz = program();
-
-    if (raiz == NULL) {
-        printf("Erro: A árvore sintática não foi construída corretamente.\n");
-        exit(1);
-    }
-
-    printf("Análise sintática concluída com sucesso!\n");
-    return raiz;
+void avance() {
+    printf("[DEBUG] Avançando token: %s (Lexema: %s) na linha %d\n",
+           token_names[token.token], token.lexema, buffer->line_number);
+    token = next_token(buffer, arquivo);
 }
 
-// Implementação das funções para cada regra da gramática
-NoArvore* program() {
-    NoArvore* no = criar_no("program");
-    adicionar_filho(no, decl_list());
-    return no;
-}
-
-NoArvore* decl_list() {
-    NoArvore* no = criar_no("decl_list");
-    while (token.token == INT || token.token == VOID) {
-        adicionar_filho(no, decl());
-    }
-    return no;
-}
-
-NoArvore* decl() {
-    NoArvore* no = criar_no("decl");
-
-    NoArvore* tipo_no = type_specifier();
-    adicionar_filho(no, tipo_no);
-
-    NoArvore* id_no = criar_no(token.lexema);  // ✅ Captura o ID antes de consumi-lo
-    match(ID);
-
-    if (token.token == ABRE_PARENTESES) {  // Se for uma função
-        adicionar_filho(no, fun_decl(id_no));
+void casa(TokenType esperado) {
+    if (token.token == esperado) {
+        avance();
     } else {
-        adicionar_filho(no, var_decl(id_no));
+        printf("Erro de sintaxe: token esperado %s, token encontrado %s. LINHA: %d\n", token_names[esperado], token_names[token.token], buffer->line_number);
+        exit(EXIT_FAILURE);
+    }
+}
+
+NoArvore* programa() {
+    NoArvore* no = criar_no("programa");
+    adicionar_filho(no, declaracao_lista());
+    casa(FIM_DE_ARQUIVO);
+    return no;
+}
+
+NoArvore* declaracao_lista() {
+    NoArvore* no = criar_no("declaracao_lista");
+    while (token.token == INT || token.token == VOID) { // pois podem ter várias declarações
+        adicionar_filho(no, declaracao());
+    }
+    return no;
+}
+
+NoArvore* declaracao() {
+    NoArvore* no = criar_no("declaracao");
+    if (token.token == INT)
+        casa(INT);
+    else if (token.token == VOID)
+        casa(VOID);
+    else {
+        printf("Erro de sintaxe: token esperado INT ou VOID, token encontrado %s.\n", token_names[token.token]);
+        exit(EXIT_FAILURE);
+    }
+
+    // agora o token que esperamos é um ID
+    if (token.token == ID) {
+        casa(ID);
+    } else {
+        printf("Erro de sintaxe: token esperado ID, token encontrado %s.\n", token_names[token.token]);
+        exit(EXIT_FAILURE);
+    }
+
+    // agora pode ser um ';' um array ou uma função
+    if (token.token == PONTO_VIRGULA) {
+        casa(PONTO_VIRGULA);
+    } else if (token.token == ABRE_COLCHETES) {
+        casa(ABRE_COLCHETES);
+        casa(NUM);
+        casa(FECHA_COLCHETES);
+        casa(PONTO_VIRGULA);
+    } else if (token.token == ABRE_PARENTESES) {
+        adicionar_filho(no, funcao_parametros());
+    } else {
+        printf("Erro de sintaxe: token esperado ;, [ ou (, token encontrado %s.\n", token_names[token.token]);
+        exit(EXIT_FAILURE);
     }
 
     return no;
 }
 
-NoArvore* var_decl() {
-    NoArvore* no = criar_no("var_decl");
-
-    adicionar_filho(no, type_specifier()); // Tipo da variável
-
-    NoArvore* id_no = criar_no(token.lexema); // Adiciona o nome da variável
-    adicionar_filho(no, id_no);
-    match(ID);
-
-    match(PONTO_VIRGULA); // Finaliza a declaração
-
-    return no;
-}
-
-NoArvore* fun_decl(NoArvore* id_no) {
-    NoArvore* no = criar_no("fun_decl");
-
-    NoArvore* id_node = criar_no("ID");
-    adicionar_filho(id_node, id_no);  // ✅ Agora `main` será um filho de `ID`
-    adicionar_filho(no, id_node);
-
-    match(ABRE_PARENTESES);
-    adicionar_filho(no, params());
-    match(FECHA_PARENTESES);
-    
-    adicionar_filho(no, compound_stmt());
-
-    return no;
-}
-
-NoArvore* params() {
-    NoArvore* no = criar_no("params");
-
+NoArvore* funcao_parametros() {
+    NoArvore* no = criar_no("funcao_parametros");
+    casa(ABRE_PARENTESES);
     if (token.token == VOID) {
-        match(VOID);
-        // ⚠️ Se a função tem apenas "void" como parâmetro, já podemos retornar
-        return no;
-    } else if (token.token == INT) {
-        adicionar_filho(no, param_list());
-    } else if (token.token == FECHA_PARENTESES) {
-        // ⚠️ Se chegamos em ")", os parâmetros já foram consumidos corretamente
-        return no;
+        casa(VOID);
+    } else if (token.token == INT) { // pois pode ser uma fecha parenteses (caso não tenha parâmetros)
+        casa(INT);
+        adicionar_filho(no, lista_parametros());
+    }
+    casa(FECHA_PARENTESES);
+    adicionar_filho(no, composto_decl());
+    return no;
+}
+
+NoArvore* lista_parametros() {
+    NoArvore* no = criar_no("lista_parametros");
+    adicionar_filho(no, parametro());
+    while (token.token == VIRGULA) {
+        casa(VIRGULA);
+        adicionar_filho(no, parametro());
+    }
+    return no;
+}
+
+NoArvore* parametro() {
+    NoArvore* no = criar_no("parametro");
+    if (token.token == INT) {
+        casa(INT);
+        adicionar_filho(no, var());
+    } else if (token.token == ID) {
+        casa(ID);
+    } else if (token.token == NUM) {
+        casa(NUM);
     } else {
-        printf("Erro sintático na linha %d: esperado tipo de parâmetro ('int' ou 'void'), mas encontrado '%s'.\n",
-               token.linha, token_names[token.token]);
-        exit(1);
+        printf("Erro de sintaxe: token esperado INT, ID ou NUM, token encontrado %s.\n", token_names[token.token]);
+        exit(EXIT_FAILURE);
     }
-
     return no;
 }
 
-NoArvore* param_list() {
-    NoArvore* no = criar_no("param_list");
-
-    do {
-        adicionar_filho(no, param());
-
-        if (token.token == VIRGULA) {
-            match(VIRGULA);
-        } else if (token.token == FECHA_PARENTESES) {
-            // ⚠️ Se encontramos ")", significa que os parâmetros acabaram
-            return no;
-        }
-    } while (token.token == INT || token.token == VOID);
-
+NoArvore* composto_decl() {
+    NoArvore* no = criar_no("composto_decl");
+    casa(ABRE_CHAVES);
+    adicionar_filho(no, local_declaracoes());
+    adicionar_filho(no, statement_lista()); // !
+    casa(FECHA_CHAVES);
     return no;
 }
 
-NoArvore* param() {
-    NoArvore* no = criar_no("param");
-    adicionar_filho(no, type_specifier());
-    match(ID);
-    return no;
-}
-
-NoArvore* compound_stmt() {
-    NoArvore* no = criar_no("compound_stmt");
-    match(ABRE_CHAVES);
-    adicionar_filho(no, local_decl());
-    adicionar_filho(no, stmt_list());
-    
-    printf("compound_stmt(): Antes de consumir FECHA_CHAVES, token atual: %s\n", 
-           token_names[token.token]);
-
-    match(FECHA_CHAVES); // Verifica se estamos consumindo corretamente
-
-    return no;
-}
-
-NoArvore* local_decl() {
-    NoArvore* no = criar_no("local_decl");
-
-    while (token.token == INT || token.token == VOID) {  // Se houver uma variável declarada
-        adicionar_filho(no, var_decl());
+NoArvore* local_declaracoes() {
+    NoArvore* no = criar_no("local_declaracoes");
+    while (token.token == INT || token.token == VOID) {
+        adicionar_filho(no, declaracao());
     }
-
     return no;
 }
 
-NoArvore* stmt_list() {
-    NoArvore* no = criar_no("stmt_list");
-
-    while (token.token != FECHA_CHAVES && token.token != FIM_DE_ARQUIVO) {
-        printf("stmt_list(): Processando stmt() com token: %s (Linha %d)\n", 
-               token_names[token.token], token.linha);
-        
-        NoArvore* stmt_no = stmt();
-        if (stmt_no != NULL) {
-            adicionar_filho(no, stmt_no);
-        }
-
-        // ✅ Se o próximo token for `FECHA_CHAVES`, saia do loop imediatamente.
-        if (token.token == FECHA_CHAVES) {
-            printf("stmt_list(): Encontrado FECHA_CHAVES (Linha %d), saindo do loop.\n", token.linha);
-            break;
-        }
+NoArvore* statement_lista() {
+    NoArvore* no = criar_no("statement_lista");
+    while (token.token == IF || token.token == WHILE || token.token == RETURN || token.token == ABRE_CHAVES || token.token == ID || token.token == NUM || token.token == PONTO_VIRGULA) {
+        adicionar_filho(no, statement());
     }
-
     return no;
 }
 
-NoArvore* stmt() {
-    NoArvore* no = criar_no("stmt");
-
-    if (token.token == ID || token.token == NUM) {
-        printf("stmt(): Chamando expression_stmt() (Linha %d)\n", token.linha);
-        adicionar_filho(no, expression_stmt());
+NoArvore* statement() {
+    NoArvore* no = criar_no("statement");
+    if (token.token == IF) {
+        adicionar_filho(no, selecao_decl());
+    } else if (token.token == WHILE) {
+        adicionar_filho(no, iteracao_decl());
     } else if (token.token == RETURN) {
-        printf("stmt(): Chamando return_stmt() (Linha %d)\n", token.linha);
-        adicionar_filho(no, return_stmt());
-        return no;  // ✅ Retorna imediatamente para evitar consumir outro `PONTO_VIRGULA`
+        adicionar_filho(no, retorno_decl());
+    } else if (token.token == ABRE_CHAVES) {
+        adicionar_filho(no, composto_decl());
+    } else if (token.token == ID || token.token == NUM) {
+        adicionar_filho(no, expressao());
+    } else if (token.token == PONTO_VIRGULA) {
+        casa(PONTO_VIRGULA);
     } else {
-        printf("Erro sintático na linha %d: comando inválido.\n", token.linha);
-        exit(1);
+        printf("Erro de sintaxe: token esperado IF, WHILE, RETURN, {, ID, NUM ou ;, token encontrado %s.\n", token_names[token.token]);
+        exit(EXIT_FAILURE);
     }
-
     return no;
 }
 
-NoArvore* expression_stmt() {
-    NoArvore* no = criar_no("expression_stmt");
-
-    NoArvore* var_no = criar_no("var");
-    adicionar_filho(var_no, criar_no(token.lexema)); // Nome da variável
-    match(ID);
-
-    if (token.token == ATRIBUICAO) {  // Detecta atribuição
-        NoArvore* assign_no = criar_no("assign_expr");
-        adicionar_filho(assign_no, var_no);
-        
-        match(ATRIBUICAO);
-        
-        NoArvore* value_no = criar_no("NUM");  // ✅ Agora o número tem um nó específico
-        adicionar_filho(value_no, criar_no(token.lexema)); // Valor atribuído
-        match(NUM);
-
-        adicionar_filho(assign_no, value_no);
-        adicionar_filho(no, assign_no);
+NoArvore* selecao_decl() {
+    NoArvore* no = criar_no("selecao_decl");
+    casa(IF);
+    casa(ABRE_PARENTESES);
+    adicionar_filho(no, expressao());
+    casa(FECHA_PARENTESES);
+    adicionar_filho(no, statement());
+    if (token.token == ELSE) {
+        casa(ELSE);
+        adicionar_filho(no, statement());
     }
-
-    match(PONTO_VIRGULA);
     return no;
 }
 
+NoArvore* iteracao_decl() {
+    NoArvore* no = criar_no("iteracao_decl");
+    casa(WHILE);
+    casa(ABRE_PARENTESES);
+    adicionar_filho(no, expressao());
+    casa(FECHA_PARENTESES);
+    adicionar_filho(no, statement());
+    return no;
+}
 
-NoArvore* return_stmt() {
-    NoArvore* no = criar_no("return_stmt");
-    match(RETURN);
+NoArvore* retorno_decl() {
+    NoArvore* no = criar_no("retorno_decl");
+    casa(RETURN);
+    if (token.token == PONTO_VIRGULA) {
+        casa(PONTO_VIRGULA);
+    } else {
+        adicionar_filho(no, var());
+        casa(PONTO_VIRGULA);
+    }
+    return no;
+}
 
-    if (token.token != PONTO_VIRGULA) {  
-        printf("return_stmt(): Chamando expression_stmt() (Linha %d)\n", token.linha);
-        NoArvore* expr_no = expression_stmt();
-        adicionar_filho(no, expr_no);
+NoArvore* expressao() {
+    NoArvore* no = criar_no("expressao");
+
+    if (token.token != NUM) {
+        adicionar_filho(no, var());
     }
 
-    if (token.token == PONTO_VIRGULA) {  
-        printf("return_stmt(): Consumindo PONTO_VIRGULA (Linha %d)\n", token.linha);
-        match(PONTO_VIRGULA);
+    if (token.token == ATRIBUICAO) {
+        casa(ATRIBUICAO);
+        adicionar_filho(no, expressao());
+    } else if (token.token == ABRE_PARENTESES) {
+        adicionar_filho(no, args());
+    } else {
+        adicionar_filho(no, expressao_simples());
     }
+    return no;
+}
 
+NoArvore* expressao_simples() {
+    NoArvore* no = criar_no("expressao_simples");
+    adicionar_filho(no, soma());
+    if (token.token == MENOR || token.token == MENOR_IGUAL || token.token == MAIOR || token.token == MAIOR_IGUAL || token.token == IGUAL || token.token == DIFERENTE || token.token == MENOS || token.token == MAIS) {
+        avance();
+        adicionar_filho(no, soma());
+    }
+    return no;
+}
+
+NoArvore* soma() {
+    NoArvore* no = criar_no("soma");
+    adicionar_filho(no, termo());
+    while (token.token == MAIS || token.token == MENOS) {
+        avance();
+        adicionar_filho(no, termo());
+    }
+    return no;
+}
+
+NoArvore* termo() {
+    NoArvore* no = criar_no("termo");
+    adicionar_filho(no, fator());
+    while (token.token == VEZES || token.token == DIVISAO) {
+        avance();
+        adicionar_filho(no, fator());
+    }
+    return no;
+}
+
+NoArvore* fator() {
+    NoArvore* no = criar_no("fator");
+    if (token.token == ABRE_PARENTESES) {
+        casa(ABRE_PARENTESES);
+        adicionar_filho(no, expressao());
+        casa(FECHA_PARENTESES);
+    } else if (token.token == ID) {
+        avance();
+        if (token.token == ABRE_COLCHETES) {
+            avance();
+            adicionar_filho(no, expressao());
+            casa(FECHA_COLCHETES);
+        } else if (token.token == ABRE_PARENTESES) {
+            adicionar_filho(no, args());
+        }
+    } else if (token.token == NUM) {
+        casa(NUM);
+    } else {
+        adicionar_filho(no, relacional());
+    }
+    return no;
+}
+
+NoArvore* relacional() {
+    NoArvore* no = criar_no("relacional");
+    switch (token.token) {
+        case MENOR:
+            casa(MENOR);
+            break;
+        case MENOR_IGUAL:
+            casa(MENOR_IGUAL);
+            break;
+        case MAIOR:
+            casa(MAIOR);
+            break;
+        case MAIOR_IGUAL:
+            casa(MAIOR_IGUAL);
+            break;
+        case IGUAL:
+            casa(IGUAL);
+            break;
+        case DIFERENTE:
+            casa(DIFERENTE);
+            break;
+        default:
+            printf("Erro de sintaxe: token esperado <, <=, >, >=, == ou !=, token encontrado %s.\n", token_names[token.token]);
+            exit(EXIT_FAILURE);
+    }
+    adicionar_filho(no, expressao());
+    return no;
+}
+
+NoArvore* args() {
+    NoArvore* no = criar_no("args");
+    casa(ABRE_PARENTESES);
+    if (token.token != FECHA_PARENTESES) {
+        adicionar_filho(no, lista_args());
+    }
+    casa(FECHA_PARENTESES);
+    return no;
+}
+
+NoArvore* lista_args() {
+    NoArvore* no = criar_no("lista_args");
+    adicionar_filho(no, expressao());
+    while (token.token == VIRGULA) {
+        casa(VIRGULA);
+        if (token.token == NUM) {
+            casa(NUM);
+        } else {
+            adicionar_filho(no, expressao());
+        }
+    }
+    return no;
+}
+
+NoArvore* var() {
+    NoArvore* no = criar_no("var");
+    casa(ID);
+
+    if (token.token == ABRE_COLCHETES) {
+        casa(ABRE_COLCHETES);
+        adicionar_filho(no, expressao());
+        casa(FECHA_COLCHETES);
+    }
     return no;
 }
