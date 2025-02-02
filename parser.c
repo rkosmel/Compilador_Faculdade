@@ -96,7 +96,7 @@ NoArvore* declaracao() {
         casa(PONTO_VIRGULA);
     } else if (token.token == ABRE_COLCHETES) {
         casa(ABRE_COLCHETES);
-        casa(NUM);
+        adicionar_filho(no, expressao());
         casa(FECHA_COLCHETES);
         casa(PONTO_VIRGULA);
     } else if (token.token == ABRE_PARENTESES) {
@@ -112,10 +112,7 @@ NoArvore* declaracao() {
 NoArvore* funcao_parametros() {
     NoArvore* no = criar_no("funcao_parametros");
     casa(ABRE_PARENTESES);
-    if (token.token == VOID) {
-        casa(VOID);
-    } else if (token.token == INT) { // pois pode ser uma fecha parenteses (caso não tenha parâmetros)
-        casa(INT);
+    if (token.token != FECHA_PARENTESES) { // pois pode não ter parâmetros
         adicionar_filho(no, lista_parametros());
     }
     casa(FECHA_PARENTESES);
@@ -139,7 +136,7 @@ NoArvore* parametro() {
         casa(INT);
         adicionar_filho(no, var());
     } else if (token.token == ID) {
-        casa(ID);
+        adicionar_filho(no, var());
     } else if (token.token == NUM) {
         casa(NUM);
     } else {
@@ -234,15 +231,17 @@ NoArvore* retorno_decl() {
 NoArvore* expressao() {
     NoArvore* no = criar_no("expressao");
 
-    if (token.token != NUM) {
+    if (token.token == ID) {
         adicionar_filho(no, var());
-    }
-
-    if (token.token == ATRIBUICAO) {
-        casa(ATRIBUICAO);
-        adicionar_filho(no, expressao());
-    } else if (token.token == ABRE_PARENTESES) {
-        adicionar_filho(no, args());
+        if (token.token == ATRIBUICAO) {
+            casa(ATRIBUICAO);
+            adicionar_filho(no, expressao_simples());
+        } else if (token.token == ABRE_PARENTESES) {
+            adicionar_filho(no, args());
+        } else if (token.token == MENOR || token.token == MENOR_IGUAL || token.token == MAIOR || token.token == MAIOR_IGUAL || token.token == IGUAL || token.token == DIFERENTE) {
+            adicionar_filho(no, relacional());
+            adicionar_filho(no, expressao_simples());
+        }
     } else {
         adicionar_filho(no, expressao_simples());
     }
@@ -286,7 +285,7 @@ NoArvore* fator() {
         adicionar_filho(no, expressao());
         casa(FECHA_PARENTESES);
     } else if (token.token == ID) {
-        avance();
+        casa(ID);
         if (token.token == ABRE_COLCHETES) {
             avance();
             adicionar_filho(no, expressao());
@@ -297,37 +296,20 @@ NoArvore* fator() {
     } else if (token.token == NUM) {
         casa(NUM);
     } else {
-        adicionar_filho(no, relacional());
+        printf("Erro de sintaxe: token esperado (, ID ou NUM, token encontrado %s.\n", token_names[token.token]);
+        exit(EXIT_FAILURE);
     }
     return no;
 }
 
 NoArvore* relacional() {
     NoArvore* no = criar_no("relacional");
-    switch (token.token) {
-        case MENOR:
-            casa(MENOR);
-            break;
-        case MENOR_IGUAL:
-            casa(MENOR_IGUAL);
-            break;
-        case MAIOR:
-            casa(MAIOR);
-            break;
-        case MAIOR_IGUAL:
-            casa(MAIOR_IGUAL);
-            break;
-        case IGUAL:
-            casa(IGUAL);
-            break;
-        case DIFERENTE:
-            casa(DIFERENTE);
-            break;
-        default:
-            printf("Erro de sintaxe: token esperado <, <=, >, >=, == ou !=, token encontrado %s.\n", token_names[token.token]);
-            exit(EXIT_FAILURE);
+    if (token.token == MENOR || token.token == MENOR_IGUAL || token.token == MAIOR || token.token == MAIOR_IGUAL || token.token == IGUAL || token.token == DIFERENTE) {
+        avance();
+    } else {
+        printf("Erro de sintaxe: token esperado <, <=, >, >=, == ou !=, token encontrado %s.\n", token_names[token.token]);
+        exit(EXIT_FAILURE);
     }
-    adicionar_filho(no, expressao());
     return no;
 }
 
@@ -338,6 +320,7 @@ NoArvore* args() {
         adicionar_filho(no, lista_args());
     }
     casa(FECHA_PARENTESES);
+    casa(PONTO_VIRGULA);
     return no;
 }
 
@@ -361,7 +344,9 @@ NoArvore* var() {
 
     if (token.token == ABRE_COLCHETES) {
         casa(ABRE_COLCHETES);
-        adicionar_filho(no, expressao());
+        if (token.token != FECHA_COLCHETES) { // pois pode não ter expressão dentro do colchete (array)
+            adicionar_filho(no, expressao());
+        }
         casa(FECHA_COLCHETES);
     }
     return no;

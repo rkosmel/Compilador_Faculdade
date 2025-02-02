@@ -55,13 +55,13 @@ void scanner(const char *filename) {
     Buffer *buffer = allocate_buffer(); // Agora retorna um ponteiro
 
     Token token = next_token(buffer, arquivo); // Passa buffer como ponteiro
-    while (token.token != EOF) {
+    while (token.token != FIM_DE_ARQUIVO) {
         if (token.token == ERRO) {
             tratamento_de_erro(&token, buffer); // Ajustado para ponteiro
         } else {
             printf("Lexema: %s, Token: %s, Linha: %d\n", token.lexema, token_names[token.token], token.linha);
         }
-        token = next_token(buffer, arquivo); // Correção aqui também
+        token = next_token(buffer, arquivo);
     }
 
     printf("Fim do arquivo. Análise léxica concluída com sucesso!\n");

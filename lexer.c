@@ -168,6 +168,8 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
     int c;
     c = get_next_char(buffer, arquivo);
 
+    int flag_linha;
+
     // Encerrar a função se o arquivo acabar
     if (c == EOF) {
         token.token = FIM_DE_ARQUIVO;
@@ -262,7 +264,6 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
 
             case 9: {    
                 if (c == '/') {
-                    estado = 0;
                     return next_token(buffer, arquivo);
                 } else {
                     estado = 8;
@@ -276,7 +277,9 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
             }
         }
 
-        lexema[i++] = c;
+        if (estado != 8) {
+            lexema[i++] = c;
+        }
 
         int linha_atual = buffer->line_number;
 
@@ -292,18 +295,18 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
             if (c != '\n') {
                 buffer->position--;
                 if (buffer->line_number != linha_atual) {
-                    buffer->line_number--;
+                    flag_linha = 0;
                 }
             }  
             break;
         }
-        // se parou nos estados 3 ou 5 ou 7 sendo que c não é *,finalizamos o lexema
+        // se parou nos estados 3 ou 5, ou 7 sendo que c não é *, finalizamos o lexema
         if ((estado == 3 || estado == 5) || (estado == 7 && c != '*')) {
             // sairemos do automato e retornamos o caractere para o buffer se nao for um \n                             
             if (c != '\n') {
                 buffer->position--;
                 if (buffer->line_number != linha_atual) {
-                    buffer->line_number--;
+                    flag_linha = 0;
                 }
             }  
             break;
@@ -439,6 +442,7 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
         }
     }   
 
-    token.linha = buffer->line_number;
+    if (flag_linha) // caso a flag seja 1 acabamos passando antecipadamente o número da linha
+        token.linha = buffer->line_number;
     return token;
 }
