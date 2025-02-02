@@ -142,8 +142,10 @@ char get_next_char(Buffer *buffer, FILE *arquivo) {
     if (current_char == '\n') {
         buffer->line_number++;
         buffer->coluna = 0;  // Resetamos a coluna ao mudar de linha
+        buffer->line_advanced = 1; // Indica que uma nova linha começou
     } else {
         buffer->coluna++; // Incrementa a coluna normalmente
+        buffer->line_advanced = 0; // Reseta o flag se não for nova linha
     }
 
     return current_char;
@@ -167,8 +169,6 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
     int i = 0;
     int c;
     c = get_next_char(buffer, arquivo);
-
-    int flag_linha;
 
     // Encerrar a função se o arquivo acabar
     if (c == EOF) {
@@ -281,8 +281,6 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
             lexema[i++] = c;
         }
 
-        int linha_atual = buffer->line_number;
-
         c = get_next_char(buffer, arquivo);
         // verificar se acabou o arquivo
         if (c == EOF) {
@@ -294,9 +292,6 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
             // sairemos do automato e retornamos o caractere para o buffer se nao for um \n                             
             if (c != '\n') {
                 buffer->position--;
-                if (buffer->line_number != linha_atual) {
-                    flag_linha = 0;
-                }
             }  
             break;
         }
@@ -305,9 +300,6 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
             // sairemos do automato e retornamos o caractere para o buffer se nao for um \n                             
             if (c != '\n') {
                 buffer->position--;
-                if (buffer->line_number != linha_atual) {
-                    flag_linha = 0;
-                }
             }  
             break;
         }
@@ -440,9 +432,15 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
         default: {
             break;
         }
-    }   
+    }
 
-    if (flag_linha) // caso a flag seja 1 acabamos passando antecipadamente o número da linha
+    if (buffer->line_advanced) {
+        token.linha = buffer->line_number - 1; // Corrige o erro do token cair na linha seguinte
+    }
+    else {
         token.linha = buffer->line_number;
+    }
+    buffer->line_advanced = 0; // Resetamos o flag após corrigir a linha
+
     return token;
 }

@@ -11,6 +11,7 @@ typedef struct {
     int position;
     int line_number;
     int coluna;
+    int line_advanced;
 } Buffer;
 
 Buffer *allocate_buffer(); // Agora retorna um ponteiro
