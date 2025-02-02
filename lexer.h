@@ -14,14 +14,17 @@ typedef struct {
     int line_advanced;
 } Buffer;
 
-Buffer *allocate_buffer(); // Agora retorna um ponteiro
+Buffer *allocate_buffer();
 char get_next_char(Buffer *buffer, FILE *arquivo);
-extern const char *token_names[];
+extern const char *token_names[];  // Usaremos "token_names" em toda a aplicação
 int is_symbol(char c);
 
 typedef enum {
     ELSE, IF, INT, RETURN, VOID, WHILE,
-    MAIS, MENOS, VEZES, DIVISAO, MENOR, MENOR_IGUAL, MAIOR, MAIOR_IGUAL, IGUAL, DIFERENTE, ATRIBUICAO, PONTO_VIRGULA, VIRGULA, ABRE_PARENTESES, FECHA_PARENTESES, ABRE_COLCHETES, FECHA_COLCHETES, ABRE_CHAVES, FECHA_CHAVES,
+    MAIS, MENOS, VEZES, DIVISAO, MENOR, MENOR_IGUAL, MAIOR, MAIOR_IGUAL,
+    IGUAL, DIFERENTE, ATRIBUICAO, PONTO_VIRGULA, VIRGULA,
+    ABRE_PARENTESES, FECHA_PARENTESES, ABRE_COLCHETES, FECHA_COLCHETES,
+    ABRE_CHAVES, FECHA_CHAVES,
     ID, NUM, FIM_DE_ARQUIVO, ERRO
 } TokenType;
 
@@ -33,6 +36,6 @@ typedef struct {
 
 Token next_token(Buffer *buffer, FILE *arquivo);
 void tratamento_de_erro(Token *token, Buffer *buffer);
-TokenType buscar_token(const char *str); // Mapeia string para TokenType
+TokenType buscar_token(const char *str);
 
 #endif

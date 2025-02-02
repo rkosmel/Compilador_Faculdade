@@ -3,24 +3,25 @@
 
 #include "lexer.h"
 
-// Estrutura de um nó da árvore sintática
+/* Estrutura da árvore sintática (AST) */
 typedef struct NoArvore {
-    char nome[50];         // Nome do nó (ex: "if", "assign_expr", "return_stmt")
-    struct NoArvore** filhos;
+    char nome[50];         // Tipo do nó (ex.: "declaracao", "var", "expressao", etc.)
+    char lexema[65];       // Lexema real (para terminais, ex.: identificador)
+    int linha;             // Linha onde o token foi reconhecido
+    struct NoArvore **filhos;
     int num_filhos;
 } NoArvore;
 
-// Funções principais do parser
+/* Protótipos */
 NoArvore* parse(FILE *arquivo);
 void imprimir_arvore(NoArvore *raiz, int nivel);
 
-// Funções auxiliares
 void avance();
 void casa(TokenType esperado);
+NoArvore* criar_no_line(const char *nome, const char *lexema, int linha);
 void adicionar_filho(NoArvore *pai, NoArvore *filho);
-NoArvore* criar_no(const char *nome);
 
-// Funções de análise sintática
+/* Protótipos das funções da gramática */
 NoArvore* programa();
 NoArvore* declaracao_lista();
 NoArvore* declaracao();
@@ -41,7 +42,6 @@ NoArvore* termo();
 NoArvore* fator();
 NoArvore* relacional();
 NoArvore* args();
-NoArvore* var();
 NoArvore* lista_args();
 NoArvore* var();
 
