@@ -236,10 +236,11 @@ NoArvore* statement_lista() {
     return no;
 }
 
-/* statement -> selecao_decl | iteracao_decl | retorno_decl | composto_decl | expressao | ';' */
+/* statement -> selecao_decl | iteracao_decl | retorno_decl | composto_decl | expressao ';' | ';' */
 NoArvore* statement() {
     int linhaStmt = token.linha;
     NoArvore* no = criar_no_line("statement", "", linhaStmt);
+    
     if (token.token == IF) {
         adicionar_filho(no, selecao_decl());
     } else if (token.token == WHILE) {
@@ -249,16 +250,28 @@ NoArvore* statement() {
     } else if (token.token == ABRE_CHAVES) {
         adicionar_filho(no, composto_decl());
     } else if (token.token == ID || token.token == NUM) {
-        adicionar_filho(no, expressao());
+        NoArvore* exp = expressao();
+        adicionar_filho(no, exp);
+        // Após a expressão, deve haver um ponto-e-vírgula
+        if (token.token == PONTO_VIRGULA) {
+            int linhaPV = token.linha;
+            adicionar_filho(no, criar_no_line("ponto_virgula", ";", linhaPV));
+            casa(PONTO_VIRGULA);
+        } else {
+            printf("ERRO SINTATICO: ';' esperado após expressão [linha: %d], COLUNA: %zu\n",
+                   token.linha, ((buffer->coluna) - strlen(token.lexema)));
+            exit(EXIT_FAILURE);
+        }
     } else if (token.token == PONTO_VIRGULA) {
         int linhaPV = token.linha;
         adicionar_filho(no, criar_no_line("ponto_virgula", ";", linhaPV));
         casa(PONTO_VIRGULA);
     } else {
-        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %zu\n",
-                token_names[token.token], token.linha, ((buffer->coluna) - strlen(token.lexema)));
+        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA: %zu\n",
+               token_names[token.token], token.linha, ((buffer->coluna) - strlen(token.lexema)));
         exit(EXIT_FAILURE);
     }
+    
     return no;
 }
 
