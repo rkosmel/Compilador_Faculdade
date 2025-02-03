@@ -547,6 +547,7 @@ NoArvore* parse(FILE *arquivo_passado) {
     return raiz;
 }
 
+/* Função para destruir a árvore sintática, ou seja, liberar a memória alocada */
 void destroi_arvore(NoArvore *raiz) {
     if (raiz == NULL)
         return;

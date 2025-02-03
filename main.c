@@ -10,13 +10,13 @@ void parser_main(const char *filename);
 void analisar_semantica(const char *filename);
 
 int main(int argc, char *argv[]) {
-    if (argc < 3) {
+    if (argc < 3) { // precisamos da flag e do nome do arquivo
         printf("Uso: %s [-l | -L | -p | -P | -s | -S] <arquivo>\n", argv[0]);
         return 1;
     }
     char *flag = argv[1];
     char *arquivo_nome = argv[2];
-    switch(flag[1]) {
+    switch(flag[1]) { // flag[0] é o traço
         case 'l':
         case 'L':
             scanner(arquivo_nome);
@@ -53,7 +53,7 @@ void scanner(const char *filename) {
         }
         token = next_token(buffer, arquivo);
     }
-    printf("Fim do arquivo. Análise léxica concluída com sucesso!\n");
+    printf("\nFim do arquivo. Análise léxica concluída com sucesso!\n");
     fclose(arquivo);
     free(buffer);
 }

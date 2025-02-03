@@ -3,7 +3,7 @@
 #include <string.h>
 #include "lexer.h"
 
-/* Usamos uma variável estática para acompanhar a linha corrente */
+// Usaremos uma variável estática para acompanhar a linha corrente
 static int currentLine = 1;
 
 Buffer *allocate_buffer() {
@@ -37,6 +37,7 @@ const char *token_names[] = {
     "ID", "NUM", "FIM_DE_ARQUIVO", "ERRO"
 };
 
+/* Função para converter string para TokenType */
 TokenType buscar_token(const char *str) {
     int n = sizeof(token_names) / sizeof(token_names[0]);
     for (int i = 0; i < n; i++) {
@@ -46,12 +47,13 @@ TokenType buscar_token(const char *str) {
     return ERRO;
 }
 
-void tratamento_de_erro(Token *token, Buffer *buffer) {
+void tratamento_de_erro(Token *token, Buffer *buffer) { // removi tratamento de erro complexo e deixei simples (apenas com um print)
     printf("ERRO LÉXICO: \"%s\" INVALIDO [linha: %d], COLUNA %d.\n",
            token->lexema, token->linha, token->coluna);
     exit(EXIT_FAILURE);
 }
 
+/* Função para obter o próximo caractere do arquivo */
 char get_next_char(Buffer *buffer, FILE *arquivo) {
     if (arquivo == NULL) {
         printf("Erro: Tentativa de leitura com arquivo NULL.\n");
@@ -81,6 +83,7 @@ char get_next_char(Buffer *buffer, FILE *arquivo) {
     return current_char;
 }
 
+/* Função para obter o próximo token baseada no automato da pasta "Conceituais" */
 Token next_token(Buffer *buffer, FILE *arquivo) {
     if (arquivo == NULL) {
         printf("Erro: Tentativa de chamar next_token() com arquivo NULL.\n");
@@ -94,17 +97,19 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
     if (c == EOF) {
         token.token = FIM_DE_ARQUIVO;
         token.linha = linhaToken;
-        token.coluna = buffer->coluna; // ou 0, se preferir
+        token.coluna = buffer->coluna; // (0)
         return token;
     }
+
     // Pula espaços em branco, tabulações e quebras de linha
     while (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
         c = get_next_char(buffer, arquivo);
         linhaToken = currentLine;
     }
-    // Registra a coluna onde o token inicia
-    int token_coluna = buffer->coluna;  
+
+    int token_coluna = buffer->coluna; // Registra a coluna onde o token inicia
     int estado = 0;
+
     while ((c != ' ' && c != '\t' && c != '\n' && c != '\r') || estado == 8 || estado == 9) {
         switch (estado) {
             case 0:
@@ -171,7 +176,7 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
                 estado = 10;
                 break;
         }
-        if (estado != 8)
+        if (estado != 8) // se está em comentário não precisa ser armazenado
             lexema[i++] = c;
         c = get_next_char(buffer, arquivo);
         if (c == EOF) {
@@ -220,10 +225,6 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
                 case '+': token.token = MAIS; break;
                 case '-': token.token = MENOS; break;
                 case '*': token.token = VEZES; break;
-                case '/': token.token = DIVISAO; break;
-                case '<': token.token = MENOR; break;
-                case '>': token.token = MAIOR; break;
-                case '=': token.token = IGUAL; break;
                 case ';': token.token = PONTO_VIRGULA; break;
                 case ',': token.token = VIRGULA; break;
                 case '(': token.token = ABRE_PARENTESES; break;
@@ -256,7 +257,7 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
             break;
         case 6:
             strcpy(token.lexema, lexema);
-            token.token = ERRO;
+            token.token = ERRO; // pois o operador de negação sozinho não é token (válido)
             break;
         case 7:
             strcpy(token.lexema, lexema);
@@ -264,7 +265,7 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
             break;
         case 10:
             strcpy(token.lexema, lexema);
-            token.token = ERRO;
+            token.token = ERRO; // pois é nosso estado armadilha
             break;
         default:
             break;

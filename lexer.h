@@ -11,7 +11,7 @@ typedef struct {
     int position;
     int line_number;
     int coluna;
-    int line_advanced;
+    int line_advanced; // variável para controlar se a linha foi avançada de fato
 } Buffer;
 
 Buffer *allocate_buffer();
@@ -32,7 +32,7 @@ typedef struct {
     char lexema[65];
     TokenType token;
     int linha;
-    int coluna;
+    int coluna; // presisamos salvar a coluna para tratamento de erro
 } Token;
 
 Token next_token(Buffer *buffer, FILE *arquivo);
