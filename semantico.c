@@ -105,7 +105,7 @@ void analisarNo(NoArvore* no, TabelaSimbolos* tabela, const char *escopo) {
         if (isFuncao) {
             /* Insere a função na tabela (global) */
             if (!inserirSimbolo(tabela, funcNome, (funcNome[0]=='v' ? TIPO_VOID : TIPO_INT), 1, "global", no->linha)) {
-                printf("ERRO SEMÂNTICO: Redeclaração da função '%s'. LINHA: %d\n", funcNome, no->linha);
+                printf("\nERRO SEMÂNTICO: Redeclaração da função '%s'. LINHA: %d\n", funcNome, no->linha);
             }
             /* Para os parâmetros e corpo da função, o novo escopo é o nome da função */
             escopo = funcNome;
@@ -126,7 +126,7 @@ void analisarNo(NoArvore* no, TabelaSimbolos* tabela, const char *escopo) {
                         }
                     }
                     if (!inserirSimbolo(tabela, id, tipo, 0, escopo, no->linha)) {
-                        printf("ERRO SEMÂNTICO: Redeclaração da variável '%s'. LINHA: %d\n", id, no->linha);
+                        printf("\nERRO SEMÂNTICO: Redeclaração da variável '%s'. LINHA: %d\n", id, no->linha);
                     }
                     break;
                 }
@@ -154,7 +154,7 @@ void analisarNo(NoArvore* no, TabelaSimbolos* tabela, const char *escopo) {
         }
         if (id != NULL) {
             if (!inserirSimbolo(tabela, id, tipo, 0, escopo, no->linha)) {
-                printf("ERRO SEMÂNTICO: Redeclaração do parâmetro '%s'. LINHA: %d\n", id, no->linha);
+                printf("\nERRO SEMÂNTICO: Redeclaração do parâmetro '%s'. LINHA: %d\n", id, no->linha);
             }
         }
         return; // NÃO processa os filhos deste nó
@@ -164,7 +164,7 @@ void analisarNo(NoArvore* no, TabelaSimbolos* tabela, const char *escopo) {
     if (strcmp(no->nome, "var") == 0) {
         Simbolo* s = buscarSimbolo(tabela, no->lexema);
         if (s == NULL) {
-            printf("ERRO SEMÂNTICO: Variável '%s' não declarada. LINHA: %d\n", no->lexema, no->linha);
+            printf("\nERRO SEMÂNTICO: Variável '%s' não declarada. LINHA: %d\n", no->lexema, no->linha);
         }
     }
     
@@ -193,7 +193,7 @@ void analiseSemantica(NoArvore *raiz) {
     /* Imprime a tabela de símbolos no formato solicitado:
        <Nome_ID>;<Escopo>;<Tipo_ID>;<Tipo_dado>;<Linha>
        Onde Tipo_ID é "FUNCAO" se isFuncao==1, caso contrário "VARIAVEL" */
-    printf("# TABELA DE SÍMBOLOS\n");
+    printf("\n# TABELA DE SÍMBOLOS\n");
     Simbolo* sym = globalSymbols;
     while (sym != NULL) {
         const char* tipoID = sym->isFuncao ? "FUNCAO" : "VARIAVEL";
@@ -210,5 +210,5 @@ void analiseSemantica(NoArvore *raiz) {
     
     /* Agora libera a tabela global; a lista global (globalSymbols) foi copiada e não será liberada aqui */
     destruirTabela(tabelaGlobal);
-    printf("Análise semântica concluída com sucesso!\n");
+    printf("\nAnálise semântica concluída com sucesso!\n");
 }
