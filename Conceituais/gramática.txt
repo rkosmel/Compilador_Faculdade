@@ -1,0 +1,123 @@
+GRAMÁTICA UTILIZADA
+
+1. programa
+   programa → declaracao_lista FIM_DE_ARQUIVO
+
+2. Lista de declarações
+   declaracao_lista → { declaracao }
+   (ou seja, zero ou mais declarações)
+
+3. Declaração
+   declaracao → ( INT | VOID ) ID ( '[' expressao ']' ';'
+                                   | '(' funcao_parametros ')'
+                                   | ';' )
+   - Se o primeiro token for INT ou VOID, espera um ID logo em seguida.
+   - Após o ID, pode ocorrer:
+       a) Um vetor: '[' expressao ']' seguido de ';'
+       b) Uma declaração de função: '(' funcao_parametros ')'
+       c) Uma declaração simples: apenas ';'
+
+4. Parâmetros da função
+   funcao_parametros → '(' [ lista_parametros ] ')' composto_decl
+   - Dentro dos parênteses, pode ou não haver uma lista de parâmetros,
+     seguida de um bloco composto (corpo da função).
+
+5. Lista de parâmetros
+   lista_parametros → parametro { ',' parametro }
+   - Um parâmetro, seguido de zero ou mais parâmetros precedidos de vírgula.
+
+6. Parâmetro
+   parametro → ( INT var ) | var | NUM
+   - Pode ser uma declaração do tipo “int” seguida de variável,
+     ou apenas uma variável (ID possivelmente com índice),
+     ou um número (NUM). (Note que a análise semântica pode tratar NUM de
+     forma diferenciada.)
+
+7. Bloco composto (declaração de corpo de função ou bloco)
+   composto_decl → '{' local_declaracoes statement_lista '}'
+
+8. Declarações locais
+   local_declaracoes → { declaracao }
+   - Zero ou mais declarações internas ao bloco.
+
+9. Lista de statements
+   statement_lista → { statement }
+   - Zero ou mais statements.
+
+10. Statement
+    statement → selecao_decl
+              | iteracao_decl
+              | retorno_decl
+              | composto_decl
+              | expressao ';'
+              | ';'
+    - O statement pode ser:
+         a) Uma seleção (if/else)
+         b) Uma iteração (while)
+         c) Um retorno (return)
+         d) Um bloco composto
+         e) Uma expressão seguida de ponto‐e‐vírgula
+         f) Apenas um ponto‐e‐vírgula (statement vazio)
+
+11. Declaração de seleção
+    selecao_decl → IF '(' expressao ')' statement [ ELSE statement ]
+    - A estrutura if com expressão entre parênteses, seguida de um statement.
+      Opcionalmente, pode vir o ELSE e outro statement.
+
+12. Declaração de iteração
+    iteracao_decl → WHILE '(' expressao ')' statement
+    - Estrutura de loop com expressão entre parênteses e statement.
+
+13. Declaração de retorno
+    retorno_decl → RETURN [ expressao ] ';'
+    - O retorno pode ser acompanhado ou não de uma expressão, sempre finalizado
+      por ponto‐e‐vírgula.
+
+14. Expressão
+    expressao → [ var ATRIBUICAO expressao_simples ] | expressao_simples
+    - A expressão pode ser uma atribuição (variável seguida de '=' e uma
+      expressão simples) ou apenas uma expressão simples.
+
+15. Expressão simples
+    expressao_simples → soma [ operador soma ]
+    onde operador ∈ { MENOR, MENOR_IGUAL, MAIOR, MAIOR_IGUAL, IGUAL, DIFERENTE,
+                        MENOS, MAIS }
+    - Uma expressão simples é composta de uma soma (ou termo) e, opcionalmente,
+      um operador seguido de outra soma.
+
+16. Soma
+    soma → termo { ( MAIS | MENOS ) termo }
+    - Soma e subtração de termos.
+
+17. Termo
+    termo → fator { ( VEZES | DIVISAO ) fator }
+    - Multiplicação e divisão de fatores.
+
+18. Fator
+    fator → '(' expressao ')'
+          | ID [ '[' expressao ']' | '(' args ')' ]
+          | NUM
+    - Pode ser uma expressão entre parênteses,
+      um identificador (possivelmente com acesso a vetor ou chamada de função),
+      ou um número.
+
+19. Relacional (usado para operadores compostos em expressao_simples)
+    relacional → ( '<' | '<=' | '>' | '>=' | '==' | '!=' )
+
+20. Argumentos (para chamadas de função)
+    args → '(' [ lista_args ] ')'
+
+21. Lista de argumentos
+    lista_args → expressao { ',' expressao }
+    - Lista de expressões separadas por vírgula.
+
+22. Variável
+    var → ID [ '[' [ expressao ] ']' ]
+    - Um identificador, com opção de índice (acesso a vetor).
+
+Observações:
+
+Os tokens como INT, VOID, IF, ELSE, WHILE, RETURN, ID, NUM, ATRIBUICAO, MENOS, MAIS, VEZES, DIVISAO, etc., são os símbolos terminais obtidos do analisador léxico.
+As produções entre colchetes [ ... ] indicam que o conteúdo é opcional.
+As chaves { ... } indicam que a produção pode ocorrer zero ou mais vezes.
+Essa gramática é compatível com a implementação apresentada, e pode ser utilizada para entender como as funções do parser interagem durante a análise sintática.
