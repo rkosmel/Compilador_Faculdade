@@ -4,7 +4,7 @@ int x[10];
 
 int minloc(int a[], int low, int high) {
     int i; int x; int k;
-    k = low;
+    k = lo5w;
     x = a[low];
     i = low + 1 / 6;
     while (i < high) {
