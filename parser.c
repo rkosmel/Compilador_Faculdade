@@ -70,8 +70,8 @@ void casa(TokenType esperado) {
     if (token.token == esperado) {
         avance();
     } else {
-        printf("Erro de sintaxe: token esperado %s, token encontrado %s. LINHA: %d\n",
-               token_names[esperado], token_names[token.token], token.linha);
+        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %zu\n",
+                token_names[token.token], token.linha, ((buffer->coluna) - strlen(token.lexema)));
         exit(EXIT_FAILURE);
     }
 }
@@ -111,7 +111,8 @@ NoArvore* declaracao() {
         adicionar_filho(no, criar_no_line("tipo", "void", linhaTipo));
         casa(VOID);
     } else {
-        printf("Erro de sintaxe: token esperado INT ou VOID, token encontrado %s.\n", token_names[token.token]);
+        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %zu\n",
+                token_names[token.token], token.linha, ((buffer->coluna) - strlen(token.lexema)));
         exit(EXIT_FAILURE);
     }
     
@@ -121,7 +122,8 @@ NoArvore* declaracao() {
         adicionar_filho(no, id_no);
         casa(ID);
     } else {
-        printf("Erro de sintaxe: token esperado ID, token encontrado %s.\n", token_names[token.token]);
+        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %zu\n",
+                token_names[token.token], token.linha, ((buffer->coluna) - strlen(token.lexema)));
         exit(EXIT_FAILURE);
     }
     
@@ -143,7 +145,8 @@ NoArvore* declaracao() {
     } else if (token.token == ABRE_PARENTESES) {
         adicionar_filho(no, funcao_parametros());
     } else {
-        printf("Erro de sintaxe: token esperado ;, [ ou (, token encontrado %s.\n", token_names[token.token]);
+        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %zu\n",
+                token_names[token.token], token.linha, ((buffer->coluna) - strlen(token.lexema)));
         exit(EXIT_FAILURE);
     }
     return no;
@@ -193,7 +196,8 @@ NoArvore* parametro() {
         adicionar_filho(no, criar_no_line("num", token.lexema, linhaNum));
         casa(NUM);
     } else {
-        printf("Erro de sintaxe: token esperado INT, ID ou NUM, token encontrado %s.\n", token_names[token.token]);
+        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %zu\n",
+                token_names[token.token], token.linha, ((buffer->coluna) - strlen(token.lexema)));
         exit(EXIT_FAILURE);
     }
     return no;
@@ -251,7 +255,8 @@ NoArvore* statement() {
         adicionar_filho(no, criar_no_line("ponto_virgula", ";", linhaPV));
         casa(PONTO_VIRGULA);
     } else {
-        printf("Erro de sintaxe: token esperado IF, WHILE, RETURN, {, ID, NUM ou ;, token encontrado %s.\n", token_names[token.token]);
+        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %zu\n",
+                token_names[token.token], token.linha, ((buffer->coluna) - strlen(token.lexema)));
         exit(EXIT_FAILURE);
     }
     return no;
@@ -436,7 +441,8 @@ NoArvore* fator() {
         adicionar_filho(no, criar_no_line("num", token.lexema, linhaNum));
         casa(NUM);
     } else {
-        printf("Erro de sintaxe: token esperado (, ID ou NUM, token encontrado %s.\n", token_names[token.token]);
+        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %zu\n",
+                token_names[token.token], token.linha, ((buffer->coluna) - strlen(token.lexema)));
         exit(EXIT_FAILURE);
     }
     return no;
@@ -465,7 +471,8 @@ NoArvore* relacional() {
         adicionar_filho(no, criar_no_line("operador", "!=", token.linha));
         avance();
     } else {
-        printf("Erro de sintaxe: token esperado <, <=, >, >=, == ou !=, token encontrado %s.\n", token_names[token.token]);
+        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %zu\n",
+                token_names[token.token], token.linha, ((buffer->coluna) - strlen(token.lexema)));
         exit(EXIT_FAILURE);
     }
     return no;

@@ -47,8 +47,8 @@ TokenType buscar_token(const char *str) {
 }
 
 void tratamento_de_erro(Token *token, Buffer *buffer) {
-    printf("ERRO LÉXICO: \"%s\" INVALIDO [linha: %d], COLUNA %d.\n",
-           token->lexema, token->linha, buffer->coluna);
+    printf("ERRO LÉXICO: \"%s\" INVALIDO [linha: %d], COLUNA %zu.\n",
+           token->lexema, token->linha, (buffer->coluna - strlen(token->lexema)));
     exit(EXIT_FAILURE);
 }
 
