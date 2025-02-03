@@ -70,8 +70,8 @@ void casa(TokenType esperado) {
     if (token.token == esperado) {
         avance();
     } else {
-        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %zu\n",
-                token_names[token.token], token.linha, ((buffer->coluna) - strlen(token.lexema)));
+        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %d\n",
+                token_names[token.token], token.linha, token.coluna);
         exit(EXIT_FAILURE);
     }
 }
@@ -111,8 +111,8 @@ NoArvore* declaracao() {
         adicionar_filho(no, criar_no_line("tipo", "void", linhaTipo));
         casa(VOID);
     } else {
-        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %zu\n",
-                token_names[token.token], token.linha, ((buffer->coluna) - strlen(token.lexema)));
+        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %d\n",
+                token_names[token.token], token.linha, token.coluna);
         exit(EXIT_FAILURE);
     }
     
@@ -122,8 +122,8 @@ NoArvore* declaracao() {
         adicionar_filho(no, id_no);
         casa(ID);
     } else {
-        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %zu\n",
-                token_names[token.token], token.linha, ((buffer->coluna) - strlen(token.lexema)));
+        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %d\n",
+                token_names[token.token], token.linha, token.coluna);
         exit(EXIT_FAILURE);
     }
     
@@ -145,8 +145,8 @@ NoArvore* declaracao() {
     } else if (token.token == ABRE_PARENTESES) {
         adicionar_filho(no, funcao_parametros());
     } else {
-        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %zu\n",
-                token_names[token.token], token.linha, ((buffer->coluna) - strlen(token.lexema)));
+        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %d\n",
+                token_names[token.token], token.linha, token.coluna);
         exit(EXIT_FAILURE);
     }
     return no;
@@ -196,8 +196,8 @@ NoArvore* parametro() {
         adicionar_filho(no, criar_no_line("num", token.lexema, linhaNum));
         casa(NUM);
     } else {
-        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %zu\n",
-                token_names[token.token], token.linha, ((buffer->coluna) - strlen(token.lexema)));
+        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %d\n",
+                token_names[token.token], token.linha, token.coluna);
         exit(EXIT_FAILURE);
     }
     return no;
@@ -454,8 +454,8 @@ NoArvore* fator() {
         adicionar_filho(no, criar_no_line("num", token.lexema, linhaNum));
         casa(NUM);
     } else {
-        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %zu\n",
-                token_names[token.token], token.linha, ((buffer->coluna) - strlen(token.lexema)));
+        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %d\n",
+                token_names[token.token], token.linha, token.coluna);
         exit(EXIT_FAILURE);
     }
     return no;
@@ -484,8 +484,8 @@ NoArvore* relacional() {
         adicionar_filho(no, criar_no_line("operador", "!=", token.linha));
         avance();
     } else {
-        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %zu\n",
-                token_names[token.token], token.linha, ((buffer->coluna) - strlen(token.lexema)));
+        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %d\n",
+                token_names[token.token], token.linha, token.coluna);
         exit(EXIT_FAILURE);
     }
     return no;

@@ -32,6 +32,7 @@ typedef struct {
     char lexema[65];
     TokenType token;
     int linha;
+    int coluna;
 } Token;
 
 Token next_token(Buffer *buffer, FILE *arquivo);

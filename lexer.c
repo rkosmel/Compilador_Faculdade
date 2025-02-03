@@ -47,8 +47,8 @@ TokenType buscar_token(const char *str) {
 }
 
 void tratamento_de_erro(Token *token, Buffer *buffer) {
-    printf("ERRO LÉXICO: \"%s\" INVALIDO [linha: %d], COLUNA %zu.\n",
-           token->lexema, token->linha, (buffer->coluna - strlen(token->lexema)));
+    printf("ERRO LÉXICO: \"%s\" INVALIDO [linha: %d], COLUNA %d.\n",
+           token->lexema, token->linha, token->coluna);
     exit(EXIT_FAILURE);
 }
 
@@ -87,19 +87,23 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
         exit(1);
     }
     Token token;
-    int linhaToken = currentLine;  // captura a linha corrente
+    int linhaToken = currentLine;  // Captura a linha corrente
     char lexema[65] = "";
     int i = 0;
     int c = get_next_char(buffer, arquivo);
     if (c == EOF) {
         token.token = FIM_DE_ARQUIVO;
         token.linha = linhaToken;
+        token.coluna = buffer->coluna; // ou 0, se preferir
         return token;
     }
+    // Pula espaços em branco, tabulações e quebras de linha
     while (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
         c = get_next_char(buffer, arquivo);
         linhaToken = currentLine;
     }
+    // Registra a coluna onde o token inicia
+    int token_coluna = buffer->coluna;  
     int estado = 0;
     while ((c != ' ' && c != '\t' && c != '\n' && c != '\r') || estado == 8 || estado == 9) {
         switch (estado) {
@@ -173,6 +177,7 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
         if (c == EOF) {
             token.token = FIM_DE_ARQUIVO;
             token.linha = linhaToken;
+            token.coluna = token_coluna;
             return token;
         }
         if (is_symbol(c) && (estado == 1 || estado == 2 || estado == 10)) {
@@ -186,6 +191,7 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
             break;
         }
     }
+    // Preenche os campos do token
     switch (estado) {
         case 1:
             strcpy(token.lexema, lexema);
@@ -264,6 +270,7 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
             break;
     }
     token.linha = linhaToken;
+    token.coluna = token_coluna;  // Armazena a coluna de início do token
     int len = strlen(buffer->buffer);
     if (token.token == ERRO && buffer->position >= len) {
         token.token = FIM_DE_ARQUIVO;
