@@ -37,17 +37,27 @@ void adicionar_filho(NoArvore *pai, NoArvore *filho) {
 }
 
 /* Imprime a AST (usada para debug ou visualização da análise sintática) */
-void imprimir_arvore(NoArvore *raiz, int nivel) {
+void imprimir_arvore_formatada(NoArvore *raiz, int indent) {
     if (raiz == NULL)
         return;
-    for (int i = 0; i < nivel; i++)
+    for (int i = 0; i < indent; i++)
         printf("    ");
     printf("%s", raiz->nome);
     if (strlen(raiz->lexema) > 0)
         printf("(%s)", raiz->lexema);
-    printf(" [Linha: %d]\n", raiz->linha);
-    for (int i = 0; i < raiz->num_filhos; i++)
-        imprimir_arvore(raiz->filhos[i], nivel + 1);
+    if (raiz->num_filhos > 0) {
+        printf(" (\n");
+        for (int i = 0; i < raiz->num_filhos; i++) {
+            imprimir_arvore_formatada(raiz->filhos[i], indent + 1);
+            if (i < raiz->num_filhos - 1)
+                printf(",\n");
+            else
+                printf("\n");
+        }
+        for (int i = 0; i < indent; i++)
+            printf("    ");
+        printf(")");
+    }
 }
 
 /* Avança para o próximo token */
@@ -513,5 +523,16 @@ NoArvore* parse(FILE *arquivo_passado) {
     avance();  // Lê o primeiro token
     NoArvore* raiz = programa();
     printf("Análise sintática concluída com sucesso!\n");
+    free(buffer);
     return raiz;
+}
+
+void destroi_arvore(NoArvore *raiz) {
+    if (raiz == NULL)
+        return;
+    for (int i = 0; i < raiz->num_filhos; i++) {
+        destroi_arvore(raiz->filhos[i]);
+    }
+    free(raiz->filhos);
+    free(raiz);
 }

@@ -16,7 +16,7 @@ typedef struct {
 
 Buffer *allocate_buffer();
 char get_next_char(Buffer *buffer, FILE *arquivo);
-extern const char *token_names[];  // Usaremos "token_names" em toda a aplicação
+extern const char *token_names[];
 int is_symbol(char c);
 
 typedef enum {

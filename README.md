@@ -49,7 +49,7 @@ Para compilar o projeto, certifique-se de ter o GCC (GNU Compiler Collection) in
 - Flags Disponíveis
 
 Análise Léxica:
--1 ou -L
+-l ou -L
 
 Análise Sintática:
 -p ou -P

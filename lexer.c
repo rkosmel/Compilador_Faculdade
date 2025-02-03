@@ -3,7 +3,7 @@
 #include <string.h>
 #include "lexer.h"
 
-// Variável estática para armazenar a linha atual (inicializada em 1)
+/* Usamos uma variável estática para acompanhar a linha corrente */
 static int currentLine = 1;
 
 Buffer *allocate_buffer() {
@@ -14,7 +14,7 @@ Buffer *allocate_buffer() {
     }
     memset(buffer->buffer, 0, BUFFER_SIZE);
     buffer->position = 0;
-    currentLine = 1;               // Reinicia a linha
+    currentLine = 1;
     buffer->line_number = currentLine;
     buffer->coluna = 0;
     buffer->line_advanced = 0;
@@ -28,7 +28,6 @@ int is_symbol(char c) {
            c == ']' || c == '{' || c == '}' || c == '!';
 }
 
-/* Definindo o array de nomes dos tokens com o mesmo nome declarado em lexer.h */
 const char *token_names[] = {
     "ELSE", "IF", "INT", "RETURN", "VOID", "WHILE",
     "MAIS", "MENOS", "VEZES", "DIVISAO", "MENOR", "MENOR_IGUAL",
@@ -41,71 +40,16 @@ const char *token_names[] = {
 TokenType buscar_token(const char *str) {
     int n = sizeof(token_names) / sizeof(token_names[0]);
     for (int i = 0; i < n; i++) {
-        if (strcmp(str, token_names[i]) == 0) {
+        if (strcmp(str, token_names[i]) == 0)
             return (TokenType)i;
-        }
     }
     return ERRO;
 }
 
 void tratamento_de_erro(Token *token, Buffer *buffer) {
-    printf("ERRO LÉXICO: \"%s\" INVÁLIDO [linha: %d], COLUNA %zu.\n",
-           token->lexema, token->linha, (size_t)(buffer->coluna - strlen(token->lexema) - 1));
-
-    char input[50];
-    printf("Deseja encerrar a compilação (F) ou ver mais informações (+)? ");
-    fgets(input, sizeof(input), stdin);
-    input[strcspn(input, "\n")] = '\0';
-
-    if (strcmp(input, "F") == 0 || strcmp(input, "f") == 0) {
-        printf("Encerrando compilação.\n");
-        exit(EXIT_FAILURE);
-    } else if (strcmp(input, "+") == 0) {
-        printf("Opções disponíveis:\n");
-        printf("1. Ignorar o lexema com erro.\n");
-        printf("2. Definir manualmente seu token.\n");
-        printf("Escolha uma opção (1 ou 2): ");
-        fgets(input, sizeof(input), stdin);
-        input[strcspn(input, "\n")] = '\0';
-
-        if (strcmp(input, "1") == 0) {
-            printf("Ignorar o lexema pode levar a futuros erros sintáticos e/ou semânticos.\n");
-            printf("Tem certeza que deseja ignorar o lexema com erro? (S/N): ");
-            fgets(input, sizeof(input), stdin);
-            input[strcspn(input, "\n")] = '\0';
-            if (strcmp(input, "S") == 0 || strcmp(input, "s") == 0) {
-                printf("Lexema ignorado.\n");
-            } else {
-                printf("Operação cancelada. Encerrando compilação.\n");
-                exit(EXIT_FAILURE);
-            }
-        } else if (strcmp(input, "2") == 0) {
-            printf("Opções disponíveis:\n");
-            int n = sizeof(token_names) / sizeof(token_names[0]);
-            for (int i = 0; i < n; i++) {
-                printf("%s%s", token_names[i],
-                       (i % 6 == 5 || i == n - 1) ? "\n" : ", ");
-            }
-            printf("Digite exatamente como nas opções disponíveis o token correto para o lexema \"%s\": ", token->lexema);
-            fgets(input, sizeof(input), stdin);
-            input[strcspn(input, "\n")] = '\0';
-
-            TokenType novoToken = buscar_token(input);
-            if (novoToken != ERRO) {
-                token->token = novoToken;
-                printf("Token \"%s\" atribuído ao lexema \"%s\".\n", token_names[novoToken], token->lexema);
-            } else {
-                printf("Token inválido. Encerrando compilação.\n");
-                exit(EXIT_FAILURE);
-            }
-        } else {
-            printf("Opção inválida. Encerrando compilação.\n");
-            exit(EXIT_FAILURE);
-        }
-    } else {
-        printf("Opção inválida. Encerrando compilação.\n");
-        exit(EXIT_FAILURE);
-    }
+    printf("ERRO LÉXICO: \"%s\" INVALIDO [linha: %d], COLUNA %d.\n",
+           token->lexema, token->linha, buffer->coluna);
+    exit(EXIT_FAILURE);
 }
 
 char get_next_char(Buffer *buffer, FILE *arquivo) {
@@ -113,7 +57,6 @@ char get_next_char(Buffer *buffer, FILE *arquivo) {
         printf("Erro: Tentativa de leitura com arquivo NULL.\n");
         exit(1);
     }
-
     if (buffer->position >= BUFFER_SIZE || buffer->buffer[buffer->position] == '\0') {
         int i = 0;
         int c;
@@ -123,14 +66,11 @@ char get_next_char(Buffer *buffer, FILE *arquivo) {
         buffer->buffer[i] = '\0';
         buffer->position = 0;
     }
-
-    if (buffer->position >= BUFFER_SIZE) {
+    if (buffer->position >= BUFFER_SIZE)
         return EOF;
-    }
-
     char current_char = buffer->buffer[buffer->position++];
     if (current_char == '\n') {
-        currentLine++;  // Incrementa a linha global
+        currentLine++;
         buffer->line_number = currentLine;
         buffer->coluna = 0;
         buffer->line_advanced = 1;
@@ -146,26 +86,20 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
         printf("Erro: Tentativa de chamar next_token() com arquivo NULL.\n");
         exit(1);
     }
-
     Token token;
-    // Use a variável estática currentLine para capturar a linha do token
-    int linhaToken = currentLine;
+    int linhaToken = currentLine;  // captura a linha corrente
     char lexema[65] = "";
     int i = 0;
     int c = get_next_char(buffer, arquivo);
-
     if (c == EOF) {
         token.token = FIM_DE_ARQUIVO;
         token.linha = linhaToken;
         return token;
     }
-
-    // Pula espaços, tabulações e quebras de linha e atualiza a linha conforme necessário
     while (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
         c = get_next_char(buffer, arquivo);
         linhaToken = currentLine;
     }
-
     int estado = 0;
     while ((c != ' ' && c != '\t' && c != '\n' && c != '\r') || estado == 8 || estado == 9) {
         switch (estado) {
@@ -174,8 +108,9 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
                     estado = 1;
                 else if (isdigit(c))
                     estado = 2;
-                else if (c == '+' || c == '-' || c == ';' || c == ',' || c == '(' ||
-                         c == ')' || c == '[' || c == ']' || c == '{' || c == '}' || c == '*')
+                else if (c == '+' || c == '-' || c == ';' || c == ',' ||
+                         c == '(' || c == ')' || c == '[' || c == ']' ||
+                         c == '{' || c == '}' || c == '*')
                     estado = 3;
                 else if (c == '<' || c == '>' || c == '=')
                     estado = 4;
@@ -232,11 +167,8 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
                 estado = 10;
                 break;
         }
-
-        if (estado != 8) {
+        if (estado != 8)
             lexema[i++] = c;
-        }
-
         c = get_next_char(buffer, arquivo);
         if (c == EOF) {
             token.token = FIM_DE_ARQUIVO;
@@ -254,7 +186,6 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
             break;
         }
     }
-
     switch (estado) {
         case 1:
             strcpy(token.lexema, lexema);
@@ -333,7 +264,6 @@ Token next_token(Buffer *buffer, FILE *arquivo) {
             break;
     }
     token.linha = linhaToken;
-
     int len = strlen(buffer->buffer);
     if (token.token == ERRO && buffer->position >= len) {
         token.token = FIM_DE_ARQUIVO;
