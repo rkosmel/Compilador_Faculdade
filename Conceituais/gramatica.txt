@@ -19,7 +19,7 @@ GRAMÁTICA UTILIZADA
 
 4. Parâmetros da função
    funcao_parametros → '(' [ lista_parametros ] ')' composto_decl
-   - Dentro dos parênteses, pode ou não haver uma lista de parâmetros,
+   - Dentro dos parênteses, pode ou não haver uma lista de parâmetros, assim como a palavra void
      seguida de um bloco composto (corpo da função).
 
 5. Lista de parâmetros

@@ -158,7 +158,10 @@ NoArvore* funcao_parametros() {
     NoArvore* no = criar_no_line("funcao_parametros", "", linhaFP);
     casa(ABRE_PARENTESES);
     if (token.token != FECHA_PARENTESES) {
-        adicionar_filho(no, lista_parametros());
+        if (token.token == VOID)
+            casa(VOID);
+        else
+            adicionar_filho(no, lista_parametros());
     }
     casa(FECHA_PARENTESES);
     adicionar_filho(no, composto_decl());
