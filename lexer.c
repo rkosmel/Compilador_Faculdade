@@ -50,7 +50,7 @@ TokenType buscar_token(const char *str) {
 void tratamento_de_erro(Token *token, Buffer *buffer) { // removi tratamento de erro complexo e deixei simples (apenas com um print)
     printf("ERRO LÉXICO: \"%s\" INVALIDO [linha: %d], COLUNA %d.\n",
            token->lexema, token->linha, token->coluna);
-    exit(EXIT_FAILURE);
+    // exit(EXIT_FAILURE); // não vamos interromper a compilação caso hajam erros léxicos no lab. de compiladores
 }
 
 /* Função para obter o próximo caractere do arquivo */

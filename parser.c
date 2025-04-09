@@ -72,7 +72,7 @@ void casa(TokenType esperado) {
     } else {
         printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %d\n",
                 token_names[token.token], token.linha, token.coluna);
-        exit(EXIT_FAILURE);
+        // exit(EXIT_FAILURE); // não vamos interrompor a compilação caso hajam erros sintáticos no lab. de compiladores
     }
 }
 
@@ -113,7 +113,7 @@ NoArvore* declaracao() {
     } else {
         printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %d\n",
                 token_names[token.token], token.linha, token.coluna);
-        exit(EXIT_FAILURE);
+        // exit(EXIT_FAILURE); // não vamos interrompor a compilação caso hajam erros sintáticos no lab. de compiladores
     }
     
     if (token.token == ID) {
@@ -124,7 +124,7 @@ NoArvore* declaracao() {
     } else {
         printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %d\n",
                 token_names[token.token], token.linha, token.coluna);
-        exit(EXIT_FAILURE);
+        // exit(EXIT_FAILURE); // não vamos interrompor a compilação caso hajam erros sintáticos no lab. de compiladores
     }
     
     if (token.token == PONTO_VIRGULA) {
@@ -147,7 +147,7 @@ NoArvore* declaracao() {
     } else {
         printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %d\n",
                 token_names[token.token], token.linha, token.coluna);
-        exit(EXIT_FAILURE);
+        // exit(EXIT_FAILURE); // não vamos interrompor a compilação caso hajam erros sintáticos no lab. de compiladores
     }
     return no;
 }
@@ -201,7 +201,7 @@ NoArvore* parametro() {
     } else {
         printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %d\n",
                 token_names[token.token], token.linha, token.coluna);
-        exit(EXIT_FAILURE);
+        // exit(EXIT_FAILURE); // não vamos interrompor a compilação caso hajam erros sintáticos no lab. de compiladores
     }
     return no;
 }
@@ -263,7 +263,7 @@ NoArvore* statement() {
         } else {
             printf("ERRO SINTATICO: ';' esperado após expressão [linha: %d], COLUNA: %zu\n",
                    token.linha, ((buffer->coluna) - strlen(token.lexema)));
-            exit(EXIT_FAILURE);
+            // exit(EXIT_FAILURE); // não vamos interrompor a compilação caso hajam erros sintáticos no lab. de compiladores
         }
     } else if (token.token == PONTO_VIRGULA) {
         int linhaPV = token.linha;
@@ -272,7 +272,7 @@ NoArvore* statement() {
     } else {
         printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA: %zu\n",
                token_names[token.token], token.linha, ((buffer->coluna) - strlen(token.lexema)));
-        exit(EXIT_FAILURE);
+        // exit(EXIT_FAILURE); // não vamos interrompor a compilação caso hajam erros sintáticos no lab. de compiladores
     }
     
     return no;
@@ -325,7 +325,7 @@ NoArvore* retorno_decl() {
         } else {
             printf("ERRO SINTATICO: ';' esperado após retorno [linha: %d], COLUNA: %zu\n",
                    token.linha, ((buffer->coluna) - strlen(token.lexema)));
-            exit(EXIT_FAILURE);
+            // exit(EXIT_FAILURE); // não vamos interrompor a compilação caso hajam erros sintáticos no lab. de compiladores
         }
     }
     return no;
@@ -500,7 +500,7 @@ NoArvore* relacional() {
     } else {
         printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %d\n",
                 token_names[token.token], token.linha, token.coluna);
-        exit(EXIT_FAILURE);
+        // exit(EXIT_FAILURE); // não vamos interrompor a compilação caso hajam erros sintáticos no lab. de compiladores
     }
     return no;
 }
@@ -556,7 +556,7 @@ NoArvore* parse(FILE *arquivo_passado) {
     buffer = allocate_buffer();
     avance();  // Lê o primeiro token
     NoArvore* raiz = programa();
-    printf("Análise sintática concluída com sucesso!\n");
+    printf("\nAnálise sintática concluída com sucesso!\n");
     free(buffer);
     return raiz;
 }
