@@ -315,11 +315,18 @@ NoArvore* retorno_decl() {
         int linhaPV = token.linha;
         adicionar_filho(no, criar_no_line("ponto_virgula", ";", linhaPV));
         casa(PONTO_VIRGULA);
-    } else {
-        adicionar_filho(no, var());
-        int linhaPV = token.linha;
-        adicionar_filho(no, criar_no_line("ponto_virgula", ";", linhaPV));
-        casa(PONTO_VIRGULA);
+    } else { // nesse caso pode ser um número, variável ou função
+        NoArvore* exp = expressao();
+        adicionar_filho(no, exp);
+        if (token.token == PONTO_VIRGULA) {
+            int linhaPV = token.linha;
+            adicionar_filho(no, criar_no_line("ponto_virgula", ";", linhaPV));
+            casa(PONTO_VIRGULA);
+        } else {
+            printf("ERRO SINTATICO: ';' esperado após retorno [linha: %d], COLUNA: %zu\n",
+                   token.linha, ((buffer->coluna) - strlen(token.lexema)));
+            exit(EXIT_FAILURE);
+        }
     }
     return no;
 }
@@ -342,6 +349,8 @@ NoArvore* expressao() {
                    token.token == MAIOR || token.token == MAIOR_IGUAL ||
                    token.token == IGUAL || token.token == DIFERENTE) {
             adicionar_filho(no, relacional());
+            adicionar_filho(no, expressao_simples());
+        } else {
             adicionar_filho(no, expressao_simples());
         }
     } else {
@@ -389,6 +398,7 @@ NoArvore* soma() {
     int linhaSoma = token.linha;
     NoArvore* no = criar_no_line("soma", "", linhaSoma);
     adicionar_filho(no, termo());
+
     while (token.token == MAIS || token.token == MENOS) {
         char op[2] = "";
         if (token.token == MAIS)
@@ -400,6 +410,7 @@ NoArvore* soma() {
         avance();
         adicionar_filho(no, termo());
     }
+
     return no;
 }
 
@@ -456,11 +467,11 @@ NoArvore* fator() {
         int linhaNum = token.linha;
         adicionar_filho(no, criar_no_line("num", token.lexema, linhaNum));
         casa(NUM);
-    } else {
-        printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %d\n",
-                token_names[token.token], token.linha, token.coluna);
-        exit(EXIT_FAILURE);
-    }
+    } // else {
+    //     printf("ERRO SINTATICO: \"%s\" INVALIDO [linha: %d], COLUNA %d\n",
+    //             token_names[token.token], token.linha, token.coluna);
+    //     exit(EXIT_FAILURE);
+    // }
     return no;
 }
 
